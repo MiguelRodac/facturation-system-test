@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { Identification } from '../../src/shared/domain/identification.vo.ts'
+import { Identification } from '../../src/cobrix/shared/domain/identification.vo.ts'
 
 describe('Value Object: Identification (Business Rules §4 & §5)', () => {
 	it('normalizes identification with prefix letter and dashes (V-12345678 -> V12345678)', () => {

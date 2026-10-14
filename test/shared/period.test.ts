@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { Period } from '../../src/shared/domain/period.vo.ts'
+import { Period } from '../../src/cobrix/shared/domain/period.vo.ts'
 
 describe('Value Object: Period (Business Rules §3.1 & §4)', () => {
 	it('parses period and due date from installment debt detail string (e.g. "PLAN15MB25 - 2026 Agosto")', () => {

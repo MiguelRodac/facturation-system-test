@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { Money } from '../../src/shared/domain/money.vo.ts'
+import { Money } from '../../src/cobrix/shared/domain/money.vo.ts'
 
 describe('Value Object: Money (Business Rules §4 & §5)', () => {
 	it('creates money instances with exact integer cents precision', () => {

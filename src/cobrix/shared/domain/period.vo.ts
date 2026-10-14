@@ -9,7 +9,7 @@
  *   (3, 6, 9, 12, or null = no window).
  */
 
-import { addCivilDays, addMonths } from '../dates.ts'
+import { addCivilDays, addMonths } from '../../../shared/dates.ts'
 
 const SPANISH_MONTH_MAP: Record<string, string> = {
 	enero: '01',
