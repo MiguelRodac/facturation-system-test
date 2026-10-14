@@ -20,13 +20,17 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 ### DEC-002: Separación de Responsabilidades y Caja Negra
 - **Regla Innegociable:** El módulo `src/billing-api/` y la base de datos `data/billing-api.sqlite` representan el sistema de facturación externo del ISP. Se tratan como una caja negra inmutable. Ningún componente de Cobrix lee o escribe directamente en dicha base de datos; la comunicación es 100% HTTP sobre el puerto 4310.
 - **Almacenamiento Propio de Cobrix:** Cobrix mantiene su propio almacén de datos independiente (`data/cobrix.sqlite`), garantizando desacoplamiento total, autonomía transaccional e idempotencia.
-- **Capas de la Solución:**
-  1. **Dominio (`src/cobrix/domain/`):** Entidades puras (`Cliente`, `Contrato`, `Factura`, `Corrida`, `DetalleCuotaCorrida`), Value Objects (`Identificacion`, `Periodo`, `Dinero`) y contratos/puertos (`BillingApiClient`, `CobrixRepository`). Cero dependencias externas.
-  2. **Casos de Uso (`src/cobrix/application/`):** Orquestación de la lógica de negocio (`ImportarFacturasUseCase`, `ActualizarPagadasUseCase`, `ObtenerResumenUseCase`, `ConsultarClienteUseCase`). Soporte nativo para modo real y simulación.
-  3. **Infraestructura (`src/cobrix/infrastructure/`):**
-     - Cliente HTTP (`HttpBillingApiClient`): Gestión de tokens JWT (vigencia de 2 horas sin refresco), control de concurrencia y tolerancia a respuestas heterogéneas.
-     - Persistencia (`SqliteCobrixRepository`): Implementación sobre `node:sqlite` para clientes, contratos Cobrix, facturas y bitácora de corridas.
-  4. **Presentación / Web (`src/web/`):** Vistas del panel de administración (puerto 4300) consumiendo los casos de uso a través de HTTP nativo.
+
+### DEC-003: Vertical Slice Architecture Hexagonal con Barrel Exports
+- **Contexto:** Se requiere una arquitectura limpia pero de alta cohesión y navegabilidad inmediata, alineada al estándar de ingeniería probado en `myintelli-global-api` y `api-interesting-facts`.
+- **Estructura Adoptada:**
+  - `src/shared/`: Value Objects de dominio transversal (`identificacion.vo.ts`, `dinero.vo.ts`, `periodo.vo.ts`), cliente HTTP del ISP (`billing-api.client.ts`) y conexión SQLite (`database.ts`).
+  - `src/feature/<nombre-feature>/`: Cada capacidad de negocio contiene capas directas sin micro-carpetas anidadas innecesarias:
+    - `application/`: Casos de uso y servicios directos.
+    - `domain/`: Entidades, errores y puertos de persistencia/servicios.
+    - `infrastructure/`: Implementaciones concretas de repositorios (SQLite) y rutas web/API.
+    - `index.ts`: Barrel export que expone la API pública del módulo.
+  - Features delimitadas según el enunciado: `configuracion` (§3.1), `importacion` (§3.2, §4), `pagos` (§3.3, §4), `corridas` (§3.4) y `clientes` (§3.5, §3.6).
 
 ---
 
