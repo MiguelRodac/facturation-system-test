@@ -8,7 +8,7 @@
  * - Payment book inspection handling the success:false quirk (docs/API.md §3.4)
  */
 
-import { HttpClientService } from './services/http-client.service.ts'
+import { HttpClientService, isHttpStatus } from './services/http-client.service.ts'
 
 export interface BillingApiClientConfig {
 	readonly baseUrl: string
@@ -103,6 +103,32 @@ export class BillingApiClient {
 	}
 
 	/**
+	 * Clears cached authentication token.
+	 */
+	clearCache(): void {
+		this.cachedToken = null
+		this.tokenExpiresAtMs = 0
+	}
+
+	/**
+	 * Performs an authenticated GET request, automatically refreshing token on 401.
+	 */
+	private async authenticatedGet<T>(url: string): Promise<T> {
+		let token = await this.getToken()
+		try {
+			return await this.http.get<T>(url, { headers: { authorization: `Bearer ${token}` } })
+		} catch (error) {
+			if (isHttpStatus(error, 401)) {
+				this.cachedToken = null
+				this.tokenExpiresAtMs = 0
+				token = await this.getToken()
+				return await this.http.get<T>(url, { headers: { authorization: `Bearer ${token}` } })
+			}
+			throw error
+		}
+	}
+
+	/**
 	 * Tests connection to the ISP: logs in and counts all contracts.
 	 * docs/ENUNCIADO.md §3.1: "Botón Probar conexión: inicia sesión y dice cuántos contratos hay."
 	 */
@@ -119,10 +145,8 @@ export class BillingApiClient {
 	 * docs/API.md §3.2: Never send `estado` query parameter, otherwise the API only returns active ones.
 	 */
 	async getContractIds(): Promise<number[]> {
-		const token = await this.getToken()
-		const json = await this.http.get<{ success: boolean; data: number[] }>(
+		const json = await this.authenticatedGet<{ success: boolean; data: number[] }>(
 			`${this.baseUrl}/api/v1/isp/lista_ids_contratos`,
-			{ headers: { authorization: `Bearer ${token}` } },
 		)
 		return json.data ?? []
 	}
@@ -132,10 +156,8 @@ export class BillingApiClient {
 	 * docs/API.md §3.3: Returns unwrapped array. If no debt, returns a row with deuda_id: "0".
 	 */
 	async getContractInstallments(contractId: number): Promise<RawInstallmentRow[]> {
-		const token = await this.getToken()
-		const rows = await this.http.get<RawInstallmentRow[]>(
+		const rows = await this.authenticatedGet<RawInstallmentRow[]>(
 			`${this.baseUrl}/api/v1/isp/contrato/individual?id_contrato=${contractId}`,
-			{ headers: { authorization: `Bearer ${token}` } },
 		)
 		return Array.isArray(rows) ? rows : []
 	}
@@ -149,12 +171,8 @@ export class BillingApiClient {
 		startDate = '2025-06-01',
 		endDate = '2026-10-31',
 	): Promise<RawPaymentBookItem[]> {
-		const token = await this.getToken()
 		const url = `${this.baseUrl}/api/v1/isp/pago_informacion?id_contrato=${contractId}&tipo_busqueda=CUOTA&fecha_inicio=${startDate}&fecha_fin=${endDate}`
-
-		const json = await this.http.get<{ data?: RawPaymentBookItem[] }>(url, {
-			headers: { authorization: `Bearer ${token}` },
-		})
+		const json = await this.authenticatedGet<{ data?: RawPaymentBookItem[] }>(url)
 		return json.data ?? []
 	}
 }

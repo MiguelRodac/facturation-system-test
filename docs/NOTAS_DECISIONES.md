@@ -111,6 +111,32 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Impacto y Verificación:**
   La suite completa se consolidó en **67 tests pasando (0 fallos, exit code 0)** con chequeo de tipos estricto (`tsc --noEmit`) limpio. Cohesión máxima, legibilidad inmediata y cero sobre-ingeniería de carpetas.
 
+### DEC-010: Reconciliación de Pagos en Arquitectura Hexagonal y Tratamiento Contable de Pagos Parciales
+- **Contexto y Criterios de Aceptación (§3.3, §4, §5):**
+  La reconciliación de pagos compara las facturas abiertas de Cobrix contra el libro de pagos del ISP (`pago_informacion`) tras la ejecución de pagos en el simulador de caja:
+  1. *Ana Pérez (900101):* Pago total -> 3 facturas marcadas como pagadas.
+  2. *Luis Gómez cortado (900103):* Paga 25 sobre cuotas de 20 -> 1 pagada; la siguiente permanece abierta como pago parcial (`is_partial_payment = 1`).
+  3. *Comercial El Faro (900104):* Pago total -> 2 facturas marcadas como pagadas.
+  4. *Miguel Ángel Soto (900114):* Paga 70 -> 2 facturas más antiguas pagadas.
+  5. *Elena Ruiz (900113):* Pagada y posteriormente anulada vía `POST /__sim/anular` -> No debe afectarse, permanece abierta.
+  6. *Resultado Final:* Exactamente **8 facturas marcadas PAGADAS**, **34 facturas abiertas por USD 955.00** y 1 pago parcial reportado.
+- **Decisiones Técnicas:**
+  1. *Estructura Plana en `src/cobrix/features/payments/`:*
+     - `domain/`: `payment.entities.ts`, `payment-billing-api.port.ts`, `payment.repository.ts`, `payment-evaluator.service.ts`, `index.ts`.
+     - `application/`: `reconcile-payments.use-case.ts`, `simulate-payments.use-case.ts`, `index.ts`.
+     - `infrastructure/`: `isp-payment-billing-api.adapter.ts`, `sqlite-payment.repository.ts`, `index.ts`.
+  2. *Descomposición Granular en `PaymentEvaluatorService`:*
+     - `getInstallmentRows`: Agrupación de filas del libro de pagos por cuota.
+     - `areRowsConsistent`: Detección de inconsistencias entre registros repetidos del ISP.
+     - `isExonerated`: Detección de exoneraciones (`valor_pago = 0`, `saldo = 0`).
+     - `evaluate`: Orquestador puro que evalúa cada factura abierta contra las filas del libro y determina su calificación (`PAID`, `PARTIAL_PAYMENT`, `EXONERATED`, `INCONSISTENT_ROWS`, `NO_EVIDENCE`, `STILL_OPEN`).
+  3. *Regla Contable de Pagos Parciales:*
+     Cuando se detecta un abono parcial (saldo restante menor al saldo Cobrix), se marca `is_partial_payment = 1` y se registra el item en la corrida de sincronización. El balance contable de la factura abierta en Cobrix no se reduce arbitrariamente para preservar la paridad exacta de la cartera pendiente en **USD 955.00** ($1,235.00 importados inicialmente - $280.00 de las 8 facturas liquidadas = $955.00).
+  4. *Resiliencia de Token 401 en `BillingApiClient`:*
+     El reinicio del simulador (`POST /__sim/reiniciar`) invalida en memoria los tokens activos del ISP. `BillingApiClient` implementa `authenticatedGet` para capturar transparentemente el error 401, invalidar el token en caché, re-autenticar y reintentar la petición automáticamente.
+- **Verificación Determinística:**
+  Suite completa ampliada a **75 tests pasando (0 fallos, exit code 0)** con chequeo de tipos estricto limpio.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución
