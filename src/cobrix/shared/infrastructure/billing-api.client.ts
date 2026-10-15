@@ -8,10 +8,13 @@
  * - Payment book inspection handling the success:false quirk (docs/API.md §3.4)
  */
 
+import { HttpClientService } from './services/http-client.service.ts'
+
 export interface BillingApiClientConfig {
 	readonly baseUrl: string
 	readonly username: string
 	readonly password: string
+	readonly httpClient?: HttpClientService
 }
 
 export interface ContractSummary {
@@ -60,6 +63,7 @@ export class BillingApiClient {
 	private readonly baseUrl: string
 	private readonly username: string
 	private readonly password: string
+	private readonly http: HttpClientService
 
 	private cachedToken: string | null = null
 	private tokenExpiresAtMs = 0
@@ -68,6 +72,7 @@ export class BillingApiClient {
 		this.baseUrl = config.baseUrl.replace(/\/+$/, '')
 		this.username = config.username
 		this.password = config.password
+		this.http = config.httpClient ?? new HttpClientService({ timeoutMs: 10_000 })
 	}
 
 	/**
@@ -81,22 +86,10 @@ export class BillingApiClient {
 			return this.cachedToken
 		}
 
-		const response = await fetch(`${this.baseUrl}/api/v1/usuario/login`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				user_name: this.username,
-				password: this.password,
-			}),
+		const data = await this.http.post<Record<string, unknown>>(`${this.baseUrl}/api/v1/usuario/login`, {
+			user_name: this.username,
+			password: this.password,
 		})
-
-		const data = (await response.json()) as Record<string, unknown>
-
-		if (!response.ok) {
-			const detail = (data.detail as { mensaje?: string })?.mensaje
-			const msg = (detail ?? data.message ?? 'Error de autenticación con la API del ISP') as string
-			throw new Error(msg)
-		}
 
 		const token = data.access_token as string
 		const expiresIn = data.access_token_expires_in as string // e.g. "2026-10-13T12:00:00"
@@ -127,15 +120,10 @@ export class BillingApiClient {
 	 */
 	async getContractIds(): Promise<number[]> {
 		const token = await this.getToken()
-		const response = await fetch(`${this.baseUrl}/api/v1/isp/lista_ids_contratos`, {
-			headers: { authorization: `Bearer ${token}` },
-		})
-
-		if (!response.ok) {
-			throw new Error(`Error al listar contratos del ISP: HTTP ${response.status}`)
-		}
-
-		const json = (await response.json()) as { success: boolean; data: number[] }
+		const json = await this.http.get<{ success: boolean; data: number[] }>(
+			`${this.baseUrl}/api/v1/isp/lista_ids_contratos`,
+			{ headers: { authorization: `Bearer ${token}` } },
+		)
 		return json.data ?? []
 	}
 
@@ -145,15 +133,10 @@ export class BillingApiClient {
 	 */
 	async getContractInstallments(contractId: number): Promise<RawInstallmentRow[]> {
 		const token = await this.getToken()
-		const response = await fetch(`${this.baseUrl}/api/v1/isp/contrato/individual?id_contrato=${contractId}`, {
-			headers: { authorization: `Bearer ${token}` },
-		})
-
-		if (!response.ok) {
-			throw new Error(`Error al consultar contrato ${contractId}: HTTP ${response.status}`)
-		}
-
-		const rows = (await response.json()) as RawInstallmentRow[]
+		const rows = await this.http.get<RawInstallmentRow[]>(
+			`${this.baseUrl}/api/v1/isp/contrato/individual?id_contrato=${contractId}`,
+			{ headers: { authorization: `Bearer ${token}` } },
+		)
 		return Array.isArray(rows) ? rows : []
 	}
 
@@ -169,15 +152,9 @@ export class BillingApiClient {
 		const token = await this.getToken()
 		const url = `${this.baseUrl}/api/v1/isp/pago_informacion?id_contrato=${contractId}&tipo_busqueda=CUOTA&fecha_inicio=${startDate}&fecha_fin=${endDate}`
 
-		const response = await fetch(url, {
+		const json = await this.http.get<{ data?: RawPaymentBookItem[] }>(url, {
 			headers: { authorization: `Bearer ${token}` },
 		})
-
-		if (!response.ok) {
-			throw new Error(`Error al consultar libro de pagos del contrato ${contractId}: HTTP ${response.status}`)
-		}
-
-		const json = (await response.json()) as { data?: RawPaymentBookItem[] }
 		return json.data ?? []
 	}
 }

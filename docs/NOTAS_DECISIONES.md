@@ -24,13 +24,26 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 ### DEC-003: Vertical Slice Architecture Hexagonal con Barrel Exports
 - **Contexto:** Se requiere una arquitectura limpia pero de alta cohesión y navegabilidad inmediata, alineada al estándar de ingeniería probado en `myintelli-global-api` y `api-interesting-facts`.
 - **Estructura Adoptada:**
-  - `src/shared/`: Value Objects de dominio transversal (`identificacion.vo.ts`, `dinero.vo.ts`, `periodo.vo.ts`), cliente HTTP del ISP (`billing-api.client.ts`) y conexión SQLite (`database.ts`).
-  - `src/feature/<nombre-feature>/`: Cada capacidad de negocio contiene capas directas sin micro-carpetas anidadas innecesarias:
+  - `src/cobrix/shared/`: Value Objects de dominio transversal (`identification.vo.ts`, `money.vo.ts`, `period.vo.ts`), servicios base de infraestructura (`http-client.service.ts`, `database.client.ts`).
+  - `src/cobrix/feature/<nombre-feature>/`: Cada capacidad de negocio contiene capas directas sin micro-carpetas anidadas innecesarias:
     - `application/`: Casos de uso y servicios directos.
     - `domain/`: Entidades, errores y puertos de persistencia/servicios.
-    - `infrastructure/`: Implementaciones concretas de repositorios (SQLite) y rutas web/API.
+    - `infrastructure/`: Implementaciones concretas de repositorios y rutas web/API.
     - `index.ts`: Barrel export que expone la API pública del módulo.
-  - Features delimitadas según el enunciado: `configuracion` (§3.1), `importacion` (§3.2, §4), `pagos` (§3.3, §4), `corridas` (§3.4) y `clientes` (§3.5, §3.6).
+  - Features delimitadas según el enunciado: `configuration` (§3.1), `import` (§3.2, §4), `payments` (§3.3, §4), `runs` (§3.4) y `customers` (§3.5, §3.6).
+
+### DEC-004: Aislamiento de Persistencia (Database Gateway) y Resiliencia HTTP (HttpClientService)
+- **Principio de Diseño:** Aplicación estricta del Principio de Inversión de Dependencias (DIP) y Arquitectura Hexagonal. Ninguna capa de negocio o repositorio de feature debe acoplarse directamente al driver concreto de base de datos (`node:sqlite`) ni invocar primitivas de red dispersas (`fetch`).
+- **Justificación y Portabilidad:** Se diseñó el patrón Gateway mediante la abstracción `DatabaseClient` (`query`, `queryOne`, `execute`, `transaction`). Esto asegura que si Cobrix migra en el futuro a motores relacionales distribuidos como PostgreSQL o MySQL, el 100% de los repositorios y la lógica de dominio permanezcan intactos sin modificar una sola línea de código de negocio.
+- **Resiliencia de Red:** La comunicación saliente hacia la API del ISP se canaliza exclusivamente a través de `HttpClientService`, centralizando timeouts, políticas de reintento, detección tipada de fallos de red (`isNetworkError`, `isHttpStatus`) y trazabilidad sin filtrar credenciales en logs.
+- **Gobernanza y Supervisión de IA:** En el proceso de pair programming asistido por IA, se rechazó expresamente el acoplamiento directo a drivers locales que suele generar la generación rápida de código. Se impuso la creación de interfaces de gateway y capas de servicio intermedias para garantizar estándares de calidad de grado de producción (Tier A1) y desacoplamiento real.
+
+### DEC-005: Anti-Corruption Layer (ACL) y Delimitación de Contratos de Dominio
+- **Contexto:** La API del ISP expone esquemas crudos (`RawInstallmentRow`, `RawPaymentBookItem`) con estructuras heterogéneas, nombres en español y tipos inconsistentes (strings con montos, fechas naive, banderas booleanas que devuelven strings o `success: false` con payloads válidos).
+- **Decisión Arquitectónica:** Proteger el Dominio mediante una Capa Anticorrupción (ACL):
+  - Las estructuras crudas de la API externa se confinan exclusivamente a la capa de Infraestructura (`BillingApiClient` / `IspBillingApiAdapter`).
+  - El Dominio no conoce ni importa ninguna interfaz del ISP; opera únicamente con Entidades puras (`Customer`, `Contract`, `Invoice`) y Value Objects inmutables (`Identification`, `Money`, `Period`).
+  - La normalización y saneamiento de datos ocurre en la frontera de entrada (adaptador hacia el puerto de dominio), impidiendo que la deuda técnica o los cambios de contrato del proveedor externo contaminen el modelo de Cobrix.
 
 ---
 
@@ -52,6 +65,9 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 
 ## 4. Bitácora de Uso y Supervisión de Inteligencia Artificial
 
-- **Fase de Análisis y Diseño Inicial:**
-  - *Uso:* Se empleó IA para contrastar la documentación (`ENUNCIADO.md`, `API.md`) contra los fixtures de prueba (`seed.ts`, `server.ts`) a fin de mapear exhaustivamente todos los casos bordes antes de codificar.
-  - *Supervisión y Corrección Humana:* Se descartaron propuestas de frameworks pesados para el backend. Se mantuvo la decisión de utilizar las capacidades nativas de Node 24 (`node:test`, `node:sqlite`, `node:http`) para mantener el entorno ligero, rápido y sin dependencias superfluas.
+- **Fase de Análisis y Diseño de Fronteras:**
+  - *Aceleración con IA:* Exploración sistemática de la API del ISP, contrastando los endpoints contra los fixtures en `seed.ts` y catalogando rápidamente las anomalías y casos borde.
+  - *Supervisión Arquitectónica y Criterio Humano:*
+    - Se descartó la sugerencia inicial de conectar repositorios directamente a drivers concretos de base de datos (`node:sqlite`), exigiendo la abstracción `DatabaseClient` para asegurar portabilidad a PostgreSQL/MySQL.
+    - Se impuso la separación estricta entre los DTOs crudos de integración y las Entidades de Dominio (Anti-Corruption Layer), garantizando que las inconsistencias del proveedor externo no contaminen el núcleo del sistema.
+    - Se preservó la ligereza técnica: se priorizaron las APIs nativas de Node 24 (`node:test`, `node:sqlite`, `node:http`) en lugar de introducir dependencias innecesarias en tiempo de ejecución.
