@@ -45,6 +45,10 @@ export class Period {
 		return new Period(periodString)
 	}
 
+	static fromCode(periodString: string): Period {
+		return Period.fromPeriod(periodString)
+	}
+
 	/**
 	 * Parses period from ISP debt detail string (e.g. "PLAN15MB25 - 2026 Agosto" -> 2026-08).
 	 */

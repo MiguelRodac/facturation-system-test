@@ -55,15 +55,36 @@ Este documento registra de forma continua cada decisión de diseño, resolución
   - **Normalización e Idempotencia:** Elena Ruiz normalizada a ID `9000123`. Luis Gómez consolidado en 1 cliente con 2 contratos (activo y cortado). Reejecución consecutiva importa 0 facturas nuevas, marcando las 42 como `ALREADY_IMPORTED`.
   - **Topes por Corrida:** Verificación del límite `maxNewInvoices`, frenando excedentes bajo `STOPPED_BY_CAP`.
 
-### DEC-007: Refactorización y Separación de Responsabilidades: Entidades de Dominio e InstallmentEvaluator
+### DEC-007: Refactorización Inicial y Separación de Responsabilidades: InstallmentEvaluator
 - **Identificación de Deuda Técnica (Anti-Patrón Transaction Script):**
   La implementación inicial del caso de uso de importación concentró cerca de 400 líneas acumulando validaciones de contrato, filtrado de cuotas, detección de moneda incoherente y orquestación de persistencia. Además, se habían acoplado interfaces de datos (`CustomerData`, `ContractData`) arriba del puerto del repositorio en lugar de ser entidades formales del dominio.
 - **Refactorización Limpia (Ciclo TDD REFACTOR):**
-  1. **Entidades de Dominio Compartidas (`src/cobrix/shared/domain/entities.ts`):** `CustomerEntity`, `ContractEntity`, `InvoiceEntity`, `SyncRunEntity`, `SyncRunItemEntity`. Desacopladas de cualquier feature específica y reutilizables en Importación, Pagos y Expedientes.
-  2. **Domain Service `InstallmentEvaluator` (`src/cobrix/feature/import/domain/installment-evaluator.ts`):** Extrae el 100% de las reglas puras de negocio (validación de identificación, descarte de cuota 0, estados excluidos, moneda incoherente, orden cronológico, ventana y límite de recientes). Función pura sin I/O, testeable en milisegundos con su propia suite unitaria (7 nuevos tests).
-  3. **Caso de Uso Delgado (`ImportInstallmentsUseCase`):** Reducido a su responsabilidad única: orquestar la obtención de datos del ISP, delegar la calificación al Evaluador de Dominio, aplicar topes de corrida y persistir en el repositorio.
+  1. **Domain Service `InstallmentEvaluator`:** Extrae las reglas de calificación puras sin I/O.
+  2. **Caso de Uso Delgado (`ImportInstallmentsUseCase`):** Orquestación del flujo de importación.
+
+### DEC-008: Desacoplamiento de Feature Configuration y Pipeline de Reglas SOLID con Factories
+- **Detección de Acoplamiento y Violación de Bounded Contexts:**
+  Se detectó que la tabla `company_config` y los parámetros de sincronización estaban indebidamente mezclados dentro del repositorio de importación, violando la separación de contextos delimitados. Adicionalmente, las entidades estaban agrupadas de forma monolítica en `shared/domain/entities.ts` y las reglas de negocio formaban un bloque procedural con múltiples condicionales en el evaluador.
+- **Evolución Arquitectónica (Clean / Hexagonal & SOLID):**
+  1. **Feature Independiente `configuration` (`src/cobrix/features/configuration/`):**
+     - `domain/`: `ConfigurationEntity`, `ConfigurationRepository`.
+     - `application/`: `GetConfigurationUseCase`, `UpdateConfigurationUseCase`.
+     - `infrastructure/`: `SqliteConfigurationRepository` desacoplado de importación.
+  2. **Pipeline de Reglas de Dominio Desacopladas (Single Responsibility Principle):**
+     Cada regla y filtro de calificación fue extraído a su propia clase/especificación unitaria en `src/cobrix/features/import/domain/rules/`:
+     - `ContractStatusRule`: Verificación de estados importables (`ACTIVO`, `CORTADO`).
+     - `DocumentTypeRule`: Verificación de prefijos excluidos (`J`, `G`).
+     - `CurrencyCoherenceRule`: Exclusión por moneda incoherente (< 1% tarifa de plan).
+     - `ResidualDebtFilter`: Exclusión de saldos residuales (< $0.01).
+     - `ImportWindowFilter`: Ventana deslizante de meses.
+     - `RecentInstallmentsFilter`: Límite de cuotas recientes.
+     - `ImportCapPolicy`: Política de topes por corrida (`maxNewInvoices`, `maxNewAmount`).
+  3. **Patrón Factory en Capa de Aplicación (`factories/`):**
+     Se crearon `CustomerFactory`, `ContractFactory` e `InvoiceFactory` para encapsular la instanciación de entidades y normalización de identificación, erradicando el mapeo procedimental disperso.
+  4. **Entidades con Pertenencia a su Dominio:**
+     Se eliminó el archivo `shared/domain/entities.ts`. Cada entidad (`CustomerEntity`, `ContractEntity`, `InvoiceEntity`, `SyncRunEntity`) pertenece formalmente al dominio de su respectiva feature.
 - **Impacto y Garantía de Calidad:**
-  La suite creció a **50 tests pasando (0 fallos, exit code 0)** con `tsc` estricto limpio. Se eliminó la deuda técnica sin alterar ni un solo criterio de aceptación.
+  La suite creció a **70 tests pasando (0 fallos, exit code 0)** con chequeo estricto de tipos `tsc` limpio. Cohesión máxima, navegabilidad inmediata y cero deuda técnica.
 
 ---
 
