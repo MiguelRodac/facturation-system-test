@@ -4,10 +4,8 @@
  * Defines persistence operations required for importing customers, contracts, and invoices.
  */
 
-import type { CustomerEntity } from '../entities/customer.entity.ts'
-import type { ContractEntity } from '../entities/contract.entity.ts'
-import type { InvoiceEntity } from '../entities/invoice.entity.ts'
-import type { InstallmentEvaluationItem } from '../import.types.ts'
+import type { CustomerEntity, ContractEntity, InvoiceEntity } from './import.entities.ts'
+import type { InstallmentEvaluationItem } from './import.types.ts'
 
 export interface RecordSyncRunInput {
 	readonly type: 'IMPORT' | 'UPDATE_PAID'

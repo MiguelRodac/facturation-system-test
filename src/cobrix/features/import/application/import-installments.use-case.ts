@@ -11,12 +11,12 @@
 
 import type { ConfigurationEntity } from '../../configuration/domain/configuration.entity.ts'
 import type { ConfigurationRepository } from '../../configuration/domain/configuration.repository.ts'
-import type { BillingApiPort } from '../domain/ports/billing-api.port.ts'
-import type { ImportRepositoryPort } from '../domain/ports/import.repository.port.ts'
+import type { BillingApiPort } from '../domain/billing-api.port.ts'
+import type { ImportRepositoryPort } from '../domain/import.repository.ts'
 import type { ImportSummary, InstallmentEvaluationItem } from '../domain/import.types.ts'
-import { ImportCapPolicy } from '../domain/services/import-cap.policy.ts'
-import { ImportEvaluatorService } from '../domain/services/import-evaluator.service.ts'
-import { ContractFactory, CustomerFactory, InvoiceFactory } from './factories/index.ts'
+import { ImportCapPolicy } from '../domain/import-cap.policy.ts'
+import { ImportEvaluatorService } from '../domain/import-evaluator.service.ts'
+import { ContractFactory, CustomerFactory, InvoiceFactory } from './import.factories.ts'
 
 export interface ImportOptions {
 	readonly isSimulation?: boolean

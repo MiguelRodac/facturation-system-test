@@ -5,13 +5,11 @@
  */
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
-import type { CustomerEntity } from '../domain/entities/customer.entity.ts'
-import type { ContractEntity } from '../domain/entities/contract.entity.ts'
-import type { InvoiceEntity } from '../domain/entities/invoice.entity.ts'
+import type { CustomerEntity, ContractEntity, InvoiceEntity } from '../domain/import.entities.ts'
 import type {
 	ImportRepositoryPort,
 	RecordSyncRunInput,
-} from '../domain/ports/import.repository.port.ts'
+} from '../domain/import.repository.ts'
 
 export class SqliteImportRepository implements ImportRepositoryPort {
 	private readonly db: DatabaseClient

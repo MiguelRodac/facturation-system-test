@@ -8,7 +8,7 @@ import type { BillingApiClient } from '../../../shared/infrastructure/billing-ap
 import type {
 	BillingApiPort,
 	ImportableContract,
-} from '../domain/ports/billing-api.port.ts'
+} from '../domain/billing-api.port.ts'
 
 export class IspBillingApiAdapter implements BillingApiPort {
 	private readonly client: BillingApiClient

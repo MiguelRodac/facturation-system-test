@@ -86,6 +86,31 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Impacto y Garantía de Calidad:**
   La suite creció a **70 tests pasando (0 fallos, exit code 0)** con chequeo estricto de tipos `tsc` limpio. Cohesión máxima, navegabilidad inmediata y cero deuda técnica.
 
+### DEC-009: Eliminación de Ruido Visual en Import y Descomposición Granular del Evaluador en 10 Pasos
+- **Detección de Fricción Cognitiva y Complejidad Ciclomática:**
+  1. *Ruido Visual por Sobre-anidamiento:* La feature `import` contenía múltiples micro-carpetas (`domain/entities/`, `domain/rules/`, `domain/ports/`, `domain/services/`, `application/factories/`), dispersando el código en archivos diminutos de 10-15 líneas en contraste con la estructura plana y elegante de `configuration`.
+  2. *Monolito Evaluador:* A pesar de aislar las reglas, el método `evaluate()` seguía ejecutando 10 pasos en un solo bloque procedimental lineal sin exponer puntos de entrada individuales.
+- **Refactorización Limpia y Simplificación:**
+  1. *Estructura Plana Idéntica a `configuration`:*
+     - `domain/`: `import.entities.ts`, `billing-api.port.ts`, `import.repository.ts`, `import.types.ts`, `import-cap.policy.ts`, `import-evaluator.service.ts`.
+     - `application/`: `import.factories.ts`, `import-installments.use-case.ts`, `simulate-import.use-case.ts`.
+     - `infrastructure/`: `isp-billing-api.adapter.ts`, `sqlite-import.repository.ts`.
+  2. *Descomposición en 10 Métodos Granulares en `ImportEvaluatorService`:*
+     Cada paso de negocio fue expuesto como un método estático puro, reutilizable y testeable de forma independiente:
+     - `checkZeroDebt`: Detección de contratos sin deuda (`deuda_id: "0"`).
+     - `validateIdentification`: Validación y normalización de cédula/RIF.
+     - `checkDocumentType`: Exclusión de prefijos configurados (`J`, `G`).
+     - `checkContractStatus`: Filtrado de estados no importables.
+     - `checkCurrencyCoherence`: Detección de distorsión de moneda (< 1% precio de plan).
+     - `filterResidualDebts`: Filtrado de deudas residuales (< $0.01) y parsing de periodos.
+     - `sortChronologically`: Ordenamiento ascendente de cuotas por periodo.
+     - `filterByWindow`: Ventana deslizante de importación en meses.
+     - `filterByRecentLimit`: Límite de cuotas recientes.
+     - `buildCandidates`: Construcción de modelos candidatos con fecha de corte y días de gracia.
+     - `evaluate`: Orquestador global de alto nivel que compone secuencialmente los 10 pasos.
+- **Impacto y Verificación:**
+  La suite completa se consolidó en **67 tests pasando (0 fallos, exit code 0)** con chequeo de tipos estricto (`tsc --noEmit`) limpio. Cohesión máxima, legibilidad inmediata y cero sobre-ingeniería de carpetas.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución

@@ -5,8 +5,8 @@ import {
 	ContractFactory,
 	CustomerFactory,
 	InvoiceFactory,
-} from '../../src/cobrix/features/import/application/factories/index.ts'
-import type { ImportableContract } from '../../src/cobrix/features/import/domain/ports/billing-api.port.ts'
+} from '../../src/cobrix/features/import/application/import.factories.ts'
+import type { ImportableContract } from '../../src/cobrix/features/import/domain/billing-api.port.ts'
 import type { CandidateInstallment } from '../../src/cobrix/features/import/domain/import.types.ts'
 import { Money } from '../../src/cobrix/shared/domain/money.vo.ts'
 import { Period } from '../../src/cobrix/shared/domain/period.vo.ts'

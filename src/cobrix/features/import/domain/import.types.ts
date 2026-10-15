@@ -4,8 +4,7 @@
 
 import type { Money } from '../../../shared/domain/money.vo.ts'
 import type { Period } from '../../../shared/domain/period.vo.ts'
-import type { CustomerEntity } from './entities/customer.entity.ts'
-import type { ContractEntity } from './entities/contract.entity.ts'
+import type { CustomerEntity, ContractEntity } from './import.entities.ts'
 
 export type EvaluationResult =
 	| 'IMPORTED'
@@ -39,8 +38,6 @@ export interface CandidateInstallment {
 
 export interface ContractEvaluation {
 	readonly isEligible: boolean
-	readonly customer?: CustomerEntity
-	readonly contract?: ContractEntity
 	readonly candidates: readonly CandidateInstallment[]
 	readonly items: readonly InstallmentEvaluationItem[]
 }
