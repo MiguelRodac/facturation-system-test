@@ -28,11 +28,15 @@ if (!existsSync(billingApiDb)) seedBillingApi(billingApiDb)
 const billingApi = createBillingApiServer(billingApiDb)
 await billingApi.listen(billingApiPort, host)
 const simulatorUrl = `http://${host}:${billingApiPort}`
-
-const app = createApp({ simulatorUrl, assignmentPath: resolve(root, 'docs/ENUNCIADO.md') })
+const cobrixDbPath = resolve(root, 'data/cobrix.sqlite')
+const app = createApp({
+	simulatorUrl,
+	assignmentPath: resolve(root, 'docs/ENUNCIADO.md'),
+	cobrixDbPath,
+})
 app.listen(appPort, host)
 
-console.log(`Panel (esqueleto):        http://${host}:${appPort}`)
+console.log(`Panel de Cobrix:          http://${host}:${appPort}`)
 console.log(`API del administrador:    ${simulatorUrl}/api/v1`)
 console.log(`Swagger:                  ${simulatorUrl}/docs`)
 console.log(`Fecha de la prueba:       ${process.env.SANDBOX_TODAY}`)

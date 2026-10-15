@@ -64,6 +64,7 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 				contract.code,
 				contract.customerId,
 				contract.status,
+				contract.planName,
 				contract.planPrice,
 				contract.branchName ?? null,
 			],

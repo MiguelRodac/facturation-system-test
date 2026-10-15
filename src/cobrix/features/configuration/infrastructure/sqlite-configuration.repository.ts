@@ -13,6 +13,12 @@ import type { ConfigurationRepository } from '../domain/configuration.repository
 
 interface ConfigRow {
 	id: number
+	company_name: string
+	company_tax_id: string
+	billing_email: string
+	api_url: string
+	api_user: string
+	api_password: string
 	importable_statuses: string
 	import_window_months: number | null
 	max_recent_installments: number | null
@@ -20,6 +26,8 @@ interface ConfigRow {
 	max_new_invoices: number | null
 	max_new_amount: number | null
 	excluded_doc_types: string
+	auto_run_hour: string | null
+	auto_run_enabled: number
 	updated_at?: string
 }
 
@@ -32,8 +40,10 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 
 	async get(): Promise<ConfigurationEntity> {
 		const row = await this.db.queryOne<ConfigRow>(
-			`SELECT id, importable_statuses, import_window_months, max_recent_installments,
-			        grace_days, max_new_invoices, max_new_amount, excluded_doc_types, updated_at
+			`SELECT id, company_name, company_tax_id, billing_email, api_url, api_user, api_password,
+			        importable_statuses, import_window_months, max_recent_installments,
+			        grace_days, max_new_invoices, max_new_amount, excluded_doc_types,
+			        auto_run_hour, auto_run_enabled, updated_at
 			 FROM company_config WHERE id = 1`,
 		)
 
@@ -59,6 +69,12 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 
 		return {
 			id: row.id,
+			companyName: row.company_name || DEFAULT_CONFIGURATION.companyName,
+			companyTaxId: row.company_tax_id || DEFAULT_CONFIGURATION.companyTaxId,
+			billingEmail: row.billing_email || DEFAULT_CONFIGURATION.billingEmail,
+			apiUrl: row.api_url || DEFAULT_CONFIGURATION.apiUrl,
+			apiUser: row.api_user || DEFAULT_CONFIGURATION.apiUser,
+			apiPassword: row.api_password || DEFAULT_CONFIGURATION.apiPassword,
 			importableStatuses,
 			importWindowMonths: row.import_window_months,
 			maxRecentInstallments: row.max_recent_installments,
@@ -68,6 +84,8 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 			excludedDocTypes,
 			currencyMinRatio: 0.01,
 			residualThresholdCents: 1,
+			autoRunHour: row.auto_run_hour,
+			autoRunEnabled: Boolean(row.auto_run_enabled),
 			updatedAt: row.updated_at,
 		}
 	}
@@ -81,6 +99,12 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 
 		await this.db.execute(
 			`UPDATE company_config SET
+			   company_name = ?,
+			   company_tax_id = ?,
+			   billing_email = ?,
+			   api_url = ?,
+			   api_user = ?,
+			   api_password = ?,
 			   importable_statuses = ?,
 			   import_window_months = ?,
 			   max_recent_installments = ?,
@@ -88,9 +112,17 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 			   max_new_invoices = ?,
 			   max_new_amount = ?,
 			   excluded_doc_types = ?,
+			   auto_run_hour = ?,
+			   auto_run_enabled = ?,
 			   updated_at = datetime('now')
 			 WHERE id = 1`,
 			[
+				merged.companyName,
+				merged.companyTaxId,
+				merged.billingEmail,
+				merged.apiUrl,
+				merged.apiUser,
+				merged.apiPassword,
 				JSON.stringify(merged.importableStatuses),
 				merged.importWindowMonths,
 				merged.maxRecentInstallments,
@@ -98,6 +130,8 @@ export class SqliteConfigurationRepository implements ConfigurationRepository {
 				merged.maxNewInvoices,
 				merged.maxNewAmount,
 				JSON.stringify(merged.excludedDocTypes),
+				merged.autoRunHour ?? null,
+				merged.autoRunEnabled ? 1 : 0,
 			],
 		)
 

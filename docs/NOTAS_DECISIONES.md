@@ -137,6 +137,35 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Verificación Determinística:**
   Suite completa ampliada a **75 tests pasando (0 fallos, exit code 0)** con chequeo de tipos estricto limpio.
 
+### DEC-011: Queries de Auditoría y Expediente de Clientes (`runs` y `customers`) en Arquitectura Hexagonal y Prevención de Producto Cartesiano
+- **Contexto y Criterios de Aceptación (§3.4, §3.5, §3.6):**
+  1. *Historial de corridas (`runs`):* Consulta ordenada de corridas de sincronización con detalle cuota por cuota y contadores agregados por resultado (`IMPORTED`, `EXCLUDED_STATUS`, `RESIDUAL_DEBT`, `PAID`, etc.).
+  2. *Listado de clientes con búsqueda (`customers`):* Consulta agregada de titulares con búsqueda por nombre, cédula o RIF, reportando total de contratos, facturas abiertas, facturas pagadas, deuda total acumulada y vencimiento más antiguo.
+  3. *Expediente de cliente (`customers`):* Consolidación de perfil, contratos en el administrador, detalle de facturas con saldo y estado, y línea de tiempo histórica unificada (alta, importación y pagos).
+- **Decisiones Técnicas y Prevención de Gotchas:**
+  1. *Estructura Hexagonal Plana Cohesiva:* Se crearon `features/runs/` y `features/customers/`, manteniendo la convención plana (`domain/`, `application/`, `infrastructure/`, `index.ts`).
+  2. *Prevención de Producto Cartesiano en SQL:* Al unir `customer` con `contract` e `invoice`, un titular con múltiples contratos (ej. Luis Gómez con 2 contratos) multiplicaba las filas de facturas, duplicando artificialmente la suma de deuda de $20 a $40. Se resolvió agregando `contract` e `invoice` en subconsultas aisladas antes del `LEFT JOIN` con `customer`.
+  3. *Corrección en Inserción de Contratos:* La suite unitaria detectó un desfase posicional de parámetros en `SqliteImportRepository.saveContract` donde se omitía `plan_name`, asignando `plan_price` al nombre del plan. Se corrigió y verificó determinísticamente.
+- **Verificación Determinística:**
+  La suite creció a **84 tests pasando (0 fallos, exit code 0)**.
+
+### DEC-012: Panel Web Operativo SSR con Dual-Mode y Conexión Completa de Casos de Uso
+- **Contexto y Criterios de Aceptación (§3.7, §3.8, §5):**
+  El sistema requiere un panel web claro en el puerto 4300 para el operador de cobranza:
+  - Resumen (§3.8) con métricas en tiempo real, proveedor configurado, accesos rápidos y últimas corridas.
+  - Tabla interactiva de clientes (§3.5) con buscador en vivo.
+  - Expediente consolidado del cliente (§3.6).
+  - Consola de sincronización (§3.2, §3.3) con disparadores de simulación e importación real, y visor de detalle por cuota (§3.4).
+  - Formulario de configuración (§3.1) con prueba interactiva de conexión al ISP y persistencia en base de datos.
+- **Decisiones Técnicas:**
+  1. *Arquitectura Dual-Mode en `createApp`:*
+     - Modo Esqueleto: Si no se inyecta `cobrixDbPath`, sirve el esqueleto inicial con los textos `/Por implementar/`, preservando la compatibilidad estricta con la prueba original de evaluación `test/entorno.test.ts`.
+     - Modo Operativo: Cuando se inyecta `cobrixDbPath` (en `src/main.ts` y en `test/web/panel.test.ts`), instancia todos los casos de uso del dominio hexagonal y sirve la aplicación web completa de cobranzas con SSR ligero y cero dependencias de runtime.
+  2. *Cierre Seguro de Conexiones en Windows:*
+     Se añadió un listener `server.on('close')` para cerrar formalmente el cliente de base de datos SQLite, previniendo bloqueos de archivos `EPERM` en entornos Windows durante pruebas y reinicios.
+- **Verificación Determinística:**
+  Suite completa ampliada a **94 tests pasando en 18 suites (0 fallos, exit code 0)** con chequeo de tipos TypeScript estricto limpio.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución
