@@ -1,6 +1,7 @@
 export * from './domain/identification.vo.ts'
 export * from './domain/money.vo.ts'
 export * from './domain/period.vo.ts'
+export * from './domain/entities.ts'
 export * from './infrastructure/database/database.ts'
 export * from './infrastructure/database/database.client.ts'
 export * from './infrastructure/services/http-client.service.ts'

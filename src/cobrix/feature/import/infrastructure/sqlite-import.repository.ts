@@ -6,13 +6,15 @@
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
 import type {
-	ContractData,
-	CustomerData,
-	ImportConfig,
+	ContractEntity,
+	CustomerEntity,
+	InvoiceEntity,
+} from '../../../shared/domain/entities.ts'
+import type {
 	ImportRepositoryPort,
-	InvoiceData,
-	SyncRunData,
+	RecordSyncRunInput,
 } from '../domain/import.repository.port.ts'
+import type { ImportConfig } from '../domain/import.types.ts'
 
 interface ConfigRow {
 	importable_statuses: string
@@ -85,7 +87,7 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 		return row !== null
 	}
 
-	async saveCustomer(customer: CustomerData): Promise<void> {
+	async saveCustomer(customer: CustomerEntity): Promise<void> {
 		await this.db.execute(
 			`INSERT INTO customer (id, name, person_type, email, phone, address, origin, created_at)
 			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -107,7 +109,7 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 		)
 	}
 
-	async saveContract(contract: ContractData): Promise<void> {
+	async saveContract(contract: ContractEntity): Promise<void> {
 		await this.db.execute(
 			`INSERT INTO contract (id, code, customer_id, status, plan_name, plan_price, branch_name)
 			 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -130,7 +132,7 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 		)
 	}
 
-	async saveInvoice(invoice: InvoiceData): Promise<void> {
+	async saveInvoice(invoice: InvoiceEntity): Promise<void> {
 		await this.db.execute(
 			`INSERT INTO invoice (
 			   external_installment_id, contract_id, customer_id, period,
@@ -152,7 +154,7 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 		)
 	}
 
-	async recordSyncRun(run: SyncRunData): Promise<number> {
+	async recordSyncRun(run: RecordSyncRunInput): Promise<number> {
 		return this.db.transaction(async () => {
 			await this.db.execute(
 				`INSERT INTO sync_run (type, is_simulation, status, summary, error_message, started_at, finished_at)

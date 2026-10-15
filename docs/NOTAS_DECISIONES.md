@@ -55,6 +55,16 @@ Este documento registra de forma continua cada decisión de diseño, resolución
   - **Normalización e Idempotencia:** Elena Ruiz normalizada a ID `9000123`. Luis Gómez consolidado en 1 cliente con 2 contratos (activo y cortado). Reejecución consecutiva importa 0 facturas nuevas, marcando las 42 como `ALREADY_IMPORTED`.
   - **Topes por Corrida:** Verificación del límite `maxNewInvoices`, frenando excedentes bajo `STOPPED_BY_CAP`.
 
+### DEC-007: Refactorización y Separación de Responsabilidades: Entidades de Dominio e InstallmentEvaluator
+- **Identificación de Deuda Técnica (Anti-Patrón Transaction Script):**
+  La implementación inicial del caso de uso de importación concentró cerca de 400 líneas acumulando validaciones de contrato, filtrado de cuotas, detección de moneda incoherente y orquestación de persistencia. Además, se habían acoplado interfaces de datos (`CustomerData`, `ContractData`) arriba del puerto del repositorio en lugar de ser entidades formales del dominio.
+- **Refactorización Limpia (Ciclo TDD REFACTOR):**
+  1. **Entidades de Dominio Compartidas (`src/cobrix/shared/domain/entities.ts`):** `CustomerEntity`, `ContractEntity`, `InvoiceEntity`, `SyncRunEntity`, `SyncRunItemEntity`. Desacopladas de cualquier feature específica y reutilizables en Importación, Pagos y Expedientes.
+  2. **Domain Service `InstallmentEvaluator` (`src/cobrix/feature/import/domain/installment-evaluator.ts`):** Extrae el 100% de las reglas puras de negocio (validación de identificación, descarte de cuota 0, estados excluidos, moneda incoherente, orden cronológico, ventana y límite de recientes). Función pura sin I/O, testeable en milisegundos con su propia suite unitaria (7 nuevos tests).
+  3. **Caso de Uso Delgado (`ImportInstallmentsUseCase`):** Reducido a su responsabilidad única: orquestar la obtención de datos del ISP, delegar la calificación al Evaluador de Dominio, aplicar topes de corrida y persistir en el repositorio.
+- **Impacto y Garantía de Calidad:**
+  La suite creció a **50 tests pasando (0 fallos, exit code 0)** con `tsc` estricto limpio. Se eliminó la deuda técnica sin alterar ni un solo criterio de aceptación.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución
