@@ -22,7 +22,7 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Almacenamiento Propio de Cobrix:** Cobrix mantiene su propio almacén de datos independiente (`data/cobrix.sqlite`), garantizando desacoplamiento total, autonomía transaccional e idempotencia.
 
 ### DEC-003: Vertical Slice Architecture Hexagonal con Barrel Exports
-- **Contexto:** Se requiere una arquitectura limpia pero de alta cohesión y navegabilidad inmediata, alineada al estándar de ingeniería probado en `myintelli-global-api` y `api-interesting-facts`.
+- **Contexto:** Se requiere una arquitectura limpia, de alta cohesión funcional y navegabilidad inmediata, organizada en torno a las capacidades de negocio (Screaming Architecture y Vertical Slice Architecture) para evitar la dispersión de lógica y facilitar la mantenibilidad.
 - **Estructura Adoptada:**
   - `src/cobrix/shared/`: Value Objects de dominio transversal (`identification.vo.ts`, `money.vo.ts`, `period.vo.ts`), servicios base de infraestructura (`http-client.service.ts`, `database.client.ts`).
   - `src/cobrix/feature/<nombre-feature>/`: Cada capacidad de negocio contiene capas directas sin micro-carpetas anidadas innecesarias:

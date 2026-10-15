@@ -1,9 +1,8 @@
 /**
  * Outgoing HTTP Client Service
  *
- * Modeled after enterprise standards (myintelli-global-api):
  * Centralizes request execution, timeouts, headers, credential sanitization,
- * and error classification helpers (isHttpStatus, isNetworkError).
+ * and error classification helpers (isHttpStatus, isNetworkError) with zero external dependencies.
  */
 
 export interface HttpRequestOptions {
