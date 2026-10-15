@@ -25,11 +25,15 @@ export interface DatabaseClient {
 export class SqliteDatabaseClient implements DatabaseClient {
 	private readonly db: DatabaseSync
 
-	constructor(dbPathOrMemory: string) {
-		if (dbPathOrMemory !== ':memory:' && !existsSync(dirname(dbPathOrMemory))) {
-			mkdirSync(dirname(dbPathOrMemory), { recursive: true })
+	constructor(dbOrPath: string | DatabaseSync) {
+		if (typeof dbOrPath === 'string') {
+			if (dbOrPath !== ':memory:' && !existsSync(dirname(dbOrPath))) {
+				mkdirSync(dirname(dbOrPath), { recursive: true })
+			}
+			this.db = new DatabaseSync(dbOrPath)
+		} else {
+			this.db = dbOrPath
 		}
-		this.db = new DatabaseSync(dbPathOrMemory)
 		this.db.exec('PRAGMA foreign_keys = ON;')
 	}
 

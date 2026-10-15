@@ -27,8 +27,21 @@ export class Money {
 		return new Money(Math.round(amount * 100), currency)
 	}
 
+	static fromDollars(dollars: number, currency = 'USD'): Money {
+		return Money.fromDecimal(dollars, currency)
+	}
+
 	get amount(): number {
 		return this.cents / 100
+	}
+
+	get dollars(): number {
+		return this.cents / 100
+	}
+
+	static isCurrencyIncoherent(installmentAmount: number, planPrice: number): boolean {
+		if (planPrice <= 0) return false
+		return installmentAmount < planPrice * 0.01
 	}
 
 	/**

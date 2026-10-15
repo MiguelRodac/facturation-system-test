@@ -43,7 +43,17 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Decisión Arquitectónica:** Proteger el Dominio mediante una Capa Anticorrupción (ACL):
   - Las estructuras crudas de la API externa se confinan exclusivamente a la capa de Infraestructura (`BillingApiClient` / `IspBillingApiAdapter`).
   - El Dominio no conoce ni importa ninguna interfaz del ISP; opera únicamente con Entidades puras (`Customer`, `Contract`, `Invoice`) y Value Objects inmutables (`Identification`, `Money`, `Period`).
-  - La normalización y saneamiento de datos ocurre en la frontera de entrada (adaptador hacia el puerto de dominio), impidiendo que la deuda técnica o los cambios de contrato del proveedor externo contaminen el modelo de Cobrix.
+### DEC-006: Feature de Importación, Reglas de Clasificación e Idempotencia (§3.2, §4, §5)
+- **Implementación Hexagonal:**
+  - `src/cobrix/feature/import/domain/`: Puertos `BillingApiPort`, `ImportRepositoryPort` y tipos de evaluación `ImportConfig`, `ImportSummary`.
+  - `src/cobrix/feature/import/infrastructure/`: `IspBillingApiAdapter` (Capa Anticorrupción) y `SqliteImportRepository` (Gateway de persistencia).
+  - `src/cobrix/feature/import/application/`: Caso de uso `ImportInstallmentsUseCase` con soporte unificado para ejecución transaccional real y modo simulación (`isSimulation: true`).
+- **Prueba Determinística de Criterios de Aceptación (exit code 0):**
+  - **Simulación:** Predice exactamente 42 cuotas por USD 1.235,00 con cero escrituras en entidades de dominio (`customer`, `contract`, `invoice`).
+  - **Importación Real:** Crea exactamente **20 clientes** y **42 facturas abiertas** por **USD 1.235,00**.
+  - **Exclusiones Validadas:** 9 cuotas excluidas por estado (`EXCLUDED_STATUS`), 1 contrato por moneda incoherente (Jorge Castillo, `INCOHERENT_CURRENCY`), 1 cuota residual (Sofía Torres, `RESIDUAL_DEBT`) y descarte de contrato sin deuda (Laura Méndez, `NO_DEBT`).
+  - **Normalización e Idempotencia:** Elena Ruiz normalizada a ID `9000123`. Luis Gómez consolidado en 1 cliente con 2 contratos (activo y cortado). Reejecución consecutiva importa 0 facturas nuevas, marcando las 42 como `ALREADY_IMPORTED`.
+  - **Topes por Corrida:** Verificación del límite `maxNewInvoices`, frenando excedentes bajo `STOPPED_BY_CAP`.
 
 ---
 

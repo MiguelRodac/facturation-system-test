@@ -90,6 +90,14 @@ export class Period {
 		return this.value >= oldestValidPeriod
 	}
 
+	get code(): string {
+		return this.value
+	}
+
+	static compare(a: Period, b: Period): number {
+		return a.compareTo(b)
+	}
+
 	compareTo(other: Period): number {
 		return this.value.localeCompare(other.value)
 	}

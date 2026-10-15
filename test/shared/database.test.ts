@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 
-import { createCobrixDatabase, type CobrixDatabase } from '../../src/cobrix/shared/infrastructure/database.ts'
+import { createCobrixDatabase, type CobrixDatabase } from '../../src/cobrix/shared/infrastructure/database/database.ts'
 
 describe('Infrastructure: Cobrix Database (SQLite Schema §3 & §4)', () => {
 	let tempDir: string

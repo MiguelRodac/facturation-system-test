@@ -57,6 +57,18 @@ export class Identification {
 		return new Identification(value, personType, letterRaw, cleanDigits)
 	}
 
+	static parse(raw: string): Identification {
+		return Identification.create(raw)
+	}
+
+	get normalized(): string {
+		return this.value
+	}
+
+	get prefix(): 'V' | 'E' | 'J' | 'G' | 'P' | undefined {
+		return this.letter
+	}
+
 	equals(other: Identification): boolean {
 		return this.value === other.value
 	}
