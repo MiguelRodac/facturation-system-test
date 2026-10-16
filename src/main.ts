@@ -36,10 +36,17 @@ const app = createApp({
 })
 app.listen(appPort, host)
 
-console.log(`Panel de Cobrix:          http://${host}:${appPort}`)
-console.log(`API del administrador:    ${simulatorUrl}/api/v1`)
-console.log(`Swagger:                  ${simulatorUrl}/docs`)
-console.log(`Fecha de la prueba:       ${process.env.SANDBOX_TODAY}`)
+console.log(`\n🚀 ==========================================`)
+console.log(`   COBRIX BILLING SYSTEM OPERATIONAL`)
+console.log(`   ==========================================`)
+console.log(`   Panel Web (SSR):          http://${host}:${appPort}`)
+console.log(`   Panel Web (React SPA):    http://${host}:${appPort}/app/`)
+console.log(`   Cobrix Swagger UI:        http://${host}:${appPort}/docs`)
+console.log(`   Cobrix OpenAPI 3.0:       http://${host}:${appPort}/api/v1/openapi.json`)
+console.log(`   API del Administrador ISP: http://${host}:${billingApiPort}/api/v1`)
+console.log(`   Swagger del ISP:          http://${host}:${billingApiPort}/docs`)
+console.log(`   Fecha de la prueba:       ${process.env.SANDBOX_TODAY}`)
+console.log(`   ==========================================\n`)
 
 const shutdown = (): void => {
 	app.close()
