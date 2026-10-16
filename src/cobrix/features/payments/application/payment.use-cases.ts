@@ -1,21 +1,15 @@
 /**
- * Reconcile Payments Use Case (docs/ENUNCIADO.md §3.3, §4, §5)
- *
- * Orchestrates payment synchronization against ISP payment book:
- * 1. Reads contracts that have open invoices in Cobrix.
- * 2. Fetches ISP payment book for each contract.
- * 3. Evaluates open invoices using PaymentEvaluatorService.
- * 4. Marks invoices PAID or records partial payments.
- * 5. Logs audit trail in sync_run and sync_run_item.
+ * Consolidated Payment Use Cases (docs/ENUNCIADO.md §3.3, §4, §5)
+ * Matching pattern from myintelli-global-api (entity.use-cases.ts)
  */
 
 import type { PaymentBillingApiPort } from '../domain/payment-billing-api.port.ts'
-import type { PaymentRepositoryPort } from '../domain/payment.repository.ts'
 import type {
 	PaymentEvaluationItem,
 	PaymentSummary,
 } from '../domain/payment.entities.ts'
 import { PaymentEvaluatorService } from '../domain/payment-evaluator.service.ts'
+import type { PaymentRepositoryPort } from '../domain/payment.repository.ts'
 
 export interface ReconcileOptions {
 	readonly isSimulation?: boolean
@@ -125,5 +119,20 @@ export class ReconcilePaymentsUseCase {
 
 			throw error
 		}
+	}
+}
+
+export class SimulatePaymentsUseCase {
+	private readonly reconcileUseCase: ReconcilePaymentsUseCase
+
+	constructor(reconcileUseCase: ReconcilePaymentsUseCase) {
+		this.reconcileUseCase = reconcileUseCase
+	}
+
+	async execute(options: Omit<ReconcileOptions, 'isSimulation'> = {}): Promise<PaymentSummary> {
+		return this.reconcileUseCase.execute({
+			...options,
+			isSimulation: true,
+		})
 	}
 }

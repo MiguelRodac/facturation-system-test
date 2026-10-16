@@ -1,10 +1,11 @@
 /**
- * Repository Port for Customers Feature (§3.5 & §3.6)
+ * Customer Repository Port (§3.5 & §3.6)
+ * Single-table operations strictly on 'customer' table
  */
 
-import type { CustomerDossierEntity, CustomerSummaryEntity } from './customer.entities.ts'
+import type { CustomerEntity } from './customer.entities.ts'
 
 export interface CustomerRepositoryPort {
-	listCustomers(query?: string): Promise<CustomerSummaryEntity[]>
-	getCustomerDossier(customerId: string): Promise<CustomerDossierEntity | null>
+	findAll(query?: string): Promise<CustomerEntity[]>
+	findById(id: string): Promise<CustomerEntity | null>
 }

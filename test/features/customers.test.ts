@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import { describe, it, beforeEach } from 'node:test'
 import { SqliteDatabaseClient, type DatabaseClient } from '../../src/cobrix/shared/infrastructure/database/database.client.ts'
 import { createCobrixDatabase } from '../../src/cobrix/shared/infrastructure/database/database.ts'
+import { SqliteContractRepository } from '../../src/cobrix/features/contracts/index.ts'
+import { SqliteInvoiceRepository } from '../../src/cobrix/features/invoices/index.ts'
 import {
+	CustomerDossierEnricherService,
 	GetCustomerDossierUseCase,
 	ListCustomersUseCase,
 	SqliteCustomerRepository,
@@ -10,16 +13,22 @@ import {
 
 describe('Feature: Customers and Dossier (docs/ENUNCIADO.md §3.5 & §3.6)', () => {
 	let dbClient: DatabaseClient
-	let repository: SqliteCustomerRepository
+	let customerRepo: SqliteCustomerRepository
+	let contractRepo: SqliteContractRepository
+	let invoiceRepo: SqliteInvoiceRepository
+	let enricher: CustomerDossierEnricherService
 	let listCustomersUseCase: ListCustomersUseCase
 	let getCustomerDossierUseCase: GetCustomerDossierUseCase
 
 	beforeEach(() => {
 		const instance = createCobrixDatabase(':memory:')
 		dbClient = new SqliteDatabaseClient(instance.db)
-		repository = new SqliteCustomerRepository(dbClient)
-		listCustomersUseCase = new ListCustomersUseCase(repository)
-		getCustomerDossierUseCase = new GetCustomerDossierUseCase(repository)
+		customerRepo = new SqliteCustomerRepository(dbClient)
+		contractRepo = new SqliteContractRepository(dbClient)
+		invoiceRepo = new SqliteInvoiceRepository(dbClient)
+		enricher = new CustomerDossierEnricherService()
+		listCustomersUseCase = new ListCustomersUseCase(customerRepo, contractRepo, invoiceRepo, enricher)
+		getCustomerDossierUseCase = new GetCustomerDossierUseCase(customerRepo, contractRepo, invoiceRepo, enricher)
 	})
 
 	it('returns empty list when no customers exist', async () => {

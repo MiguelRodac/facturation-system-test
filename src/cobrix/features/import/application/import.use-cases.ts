@@ -1,21 +1,15 @@
 /**
- * Import Installments Use Case (docs/ENUNCIADO.md §3.1, §3.2, §4, §5)
- *
- * Orchestrates the synchronization workflow across domain rules, factories, and ports:
- * 1. Resolves configuration parameters from ConfigurationRepository.
- * 2. Fetches pending contracts from ISP via BillingApiPort.
- * 3. Evaluates business rules via ImportEvaluatorService.
- * 4. Checks deduplication and caps via ImportCapPolicy.
- * 5. Uses factories to instantiate domain models and persists via ImportRepositoryPort.
+ * Consolidated Import Use Cases (docs/ENUNCIADO.md §3.1, §3.2, §4, §5)
+ * Matching pattern from myintelli-global-api (entity.use-cases.ts)
  */
 
 import type { ConfigurationEntity } from '../../configuration/domain/configuration.entity.ts'
 import type { ConfigurationRepository } from '../../configuration/domain/configuration.repository.ts'
 import type { BillingApiPort } from '../domain/billing-api.port.ts'
-import type { ImportRepositoryPort } from '../domain/import.repository.ts'
-import type { ImportSummary, InstallmentEvaluationItem } from '../domain/import.types.ts'
 import { ImportCapPolicy } from '../domain/import-cap.policy.ts'
 import { ImportEvaluatorService } from '../domain/import-evaluator.service.ts'
+import type { ImportRepositoryPort } from '../domain/import.repository.ts'
+import type { ImportSummary, InstallmentEvaluationItem } from '../domain/import.types.ts'
 import { ContractFactory, CustomerFactory, InvoiceFactory } from './import.factories.ts'
 
 export interface ImportOptions {
@@ -42,7 +36,7 @@ export class ImportInstallmentsUseCase {
 	async execute(options: ImportOptions = {}): Promise<ImportSummary> {
 		const isSimulation = options.isSimulation ?? false
 		const startedAt = new Date().toISOString()
-		const now = options.referenceDate ?? new Date()
+		const now = options.referenceDate ?? (process.env.SANDBOX_TODAY ? new Date(`${process.env.SANDBOX_TODAY}T12:00:00Z`) : new Date())
 		const referencePeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
 		const baseConfig = await this.configRepo.get()
@@ -195,5 +189,20 @@ export class ImportInstallmentsUseCase {
 
 			throw error
 		}
+	}
+}
+
+export class SimulateImportUseCase {
+	private readonly importUseCase: ImportInstallmentsUseCase
+
+	constructor(importUseCase: ImportInstallmentsUseCase) {
+		this.importUseCase = importUseCase
+	}
+
+	async execute(options: Omit<ImportOptions, 'isSimulation'> = {}): Promise<ImportSummary> {
+		return this.importUseCase.execute({
+			...options,
+			isSimulation: true,
+		})
 	}
 }

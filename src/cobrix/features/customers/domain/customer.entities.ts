@@ -2,6 +2,19 @@
  * Domain Entities for Customers Feature (§3.5 & §3.6)
  */
 
+export interface CustomerEntity {
+	readonly id: string
+	readonly name: string
+	readonly personType: 'NATURAL' | 'LEGAL'
+	readonly email?: string | null
+	readonly phone?: string | null
+	readonly address?: string | null
+	readonly origin: string
+	readonly createdAt: string
+}
+
+export type CustomerProfileEntity = CustomerEntity
+
 export interface CustomerSummaryEntity {
 	readonly id: string
 	readonly name: string
@@ -11,17 +24,6 @@ export interface CustomerSummaryEntity {
 	readonly paidInvoicesCount: number
 	readonly totalDebt: number
 	readonly oldestDueDate: string | null
-}
-
-export interface CustomerProfileEntity {
-	readonly id: string
-	readonly name: string
-	readonly personType: 'NATURAL' | 'LEGAL'
-	readonly email?: string | null
-	readonly phone?: string | null
-	readonly address?: string | null
-	readonly origin: string
-	readonly createdAt: string
 }
 
 export interface CustomerContractEntity {
@@ -56,15 +58,17 @@ export interface CustomerTimelineEvent {
 	readonly tone: 'ok' | 'info' | 'warn' | 'mute'
 }
 
+export interface CustomerDossierTotals {
+	readonly totalDebt: number
+	readonly openCount: number
+	readonly paidCount: number
+	readonly contractsCount: number
+}
+
 export interface CustomerDossierEntity {
 	readonly profile: CustomerProfileEntity
 	readonly contracts: readonly CustomerContractEntity[]
 	readonly invoices: readonly CustomerInvoiceEntity[]
-	readonly totals: {
-		readonly totalDebt: number
-		readonly openCount: number
-		readonly paidCount: number
-		readonly contractsCount: number
-	}
+	readonly totals: CustomerDossierTotals
 	readonly timeline: readonly CustomerTimelineEvent[]
 }

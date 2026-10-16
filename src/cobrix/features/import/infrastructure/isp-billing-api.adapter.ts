@@ -2,6 +2,7 @@
  * ISP Billing API Adapter (Anti-Corruption Layer)
  *
  * Implements BillingApiPort by delegating to BillingApiClient.
+ * Supports static client or dynamic provider function.
  */
 
 import type { BillingApiClient } from '../../../shared/infrastructure/billing-api.client.ts'
@@ -11,18 +12,22 @@ import type {
 } from '../domain/billing-api.port.ts'
 
 export class IspBillingApiAdapter implements BillingApiPort {
-	private readonly client: BillingApiClient
+	private readonly getClient: () => BillingApiClient
 
-	constructor(client: BillingApiClient) {
-		this.client = client
+	constructor(clientOrProvider: BillingApiClient | (() => BillingApiClient)) {
+		if (typeof clientOrProvider === 'function') {
+			this.getClient = clientOrProvider
+		} else {
+			this.getClient = () => clientOrProvider
+		}
 	}
 
 	async fetchContractIds(): Promise<readonly number[]> {
-		return this.client.getContractIds()
+		return this.getClient().getContractIds()
 	}
 
 	async fetchContract(contractId: number): Promise<ImportableContract | null> {
-		const rows = await this.client.getContractInstallments(contractId)
+		const rows = await this.getClient().getContractInstallments(contractId)
 		if (!rows || rows.length === 0) return null
 
 		const first = rows[0]!
@@ -45,8 +50,8 @@ export class IspBillingApiAdapter implements BillingApiPort {
 			branchName: first.nombre_sucursal,
 			holderTaxId: first.identificacion_contrato,
 			holderName: first.nombre_contrato,
-			email: first.email,
 			phone: first.telefono,
+			email: first.email,
 			address: first.direccion,
 			installments,
 		}

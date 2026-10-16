@@ -166,6 +166,27 @@ Este documento registra de forma continua cada decisión de diseño, resolución
 - **Verificación Determinística:**
   Suite completa ampliada a **94 tests pasando en 18 suites (0 fallos, exit code 0)** con chequeo de tipos TypeScript estricto limpio.
 
+### DEC-013: Repositorios de Tabla Única, Casos de Uso Cohesivos, RFC 9457 y Frontend React Desacoplado
+- **Detección de Deuda y Acoplamiento Estructural:**
+  1. *Fuga de Responsabilidad en Repositorios:* `SqliteCustomerRepository` ejecutaba consultas directas sobre las tablas `contract` e `invoice`, violando el principio de persistencia unívoca por módulo (Single-Table Repository).
+  2. *Atomización Excesiva de Casos de Uso:* Existían archivos unitarios por cada verbo (`list-customers.use-case.ts`, `get-customer-dossier.use-case.ts`), generando dispersión y fricción de lectura.
+  3. *Acoplamiento Visual:* El frontend residía en el mismo proceso como SSR en strings de TypeScript, dificultando un diseño moderno de alta fidelidad.
+- **Solución Arquitectónica (Alineada con `myintelli-global-api` y `api-interesting-facts`):**
+  1. *Desacoplamiento de Repositorios a Tabla Única:*
+     - `features/contracts/`: Repositorio exclusivo sobre la tabla `contract`.
+     - `features/invoices/`: Repositorio exclusivo sobre la tabla `invoice`.
+     - `features/customers/`: Repositorio exclusivo sobre la tabla `customer`.
+  2. *Application Enrichment Service:*
+     Se introdujo `CustomerDossierEnricherService` en la capa de aplicación de clientes. Este servicio recibe las entidades puras obtenidas de los tres repositorios independientes, calcula la morosidad y totales, y construye la línea de tiempo histórica sin involucrar SQL en la agregación.
+  3. *Unificación de Casos de Uso Cohesivos:*
+     Se agruparon los casos de uso por feature en archivos cohesivos (`customer.use-cases.ts`, `configuration.use-cases.ts`, `import.use-cases.ts`, `payment.use-cases.ts`, `runs.use-cases.ts`).
+  4. *Estandarización RFC 9457 Problem Details:*
+     Se implementó el formateo uniforme de errores HTTP en `application/problem+json` (`type`, `title`, `status`, `detail`, `instance`, `trace_id`), asegurando paridad con `api-interesting-facts`.
+  5. *Frontend SPA en React + Vite (`frontend/`):*
+     Se aisló el frontend como un cliente HTTP desacoplado que consume `/api/v1/*`, permitiendo un diseño visual avanzado sin comprometer el fallback de `test/entorno.test.ts`.
+  6. *Punto Diferencial (§6 y §7):*
+     Se documentó la propuesta de evolución técnica desde la sincronización batch diaria (polling a las 3:00 AM) hacia una arquitectura orientada a eventos en tiempo real mediante **Webhooks** (`POST /api/v1/webhooks/isp-payments`) o streaming de eventos (**Kafka / AWS SQS**), eliminando la cobranza tardía sobre clientes que pagaron minutos antes en taquilla.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución

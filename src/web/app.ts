@@ -10,8 +10,9 @@
  * Fallback to skeleton mode if cobrixDbPath is not provided (preserves test/entorno.test.ts).
  */
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
+import { extname, join } from 'node:path'
 import { BillingApiClient } from '../cobrix/shared/infrastructure/billing-api.client.ts'
 import { SqliteDatabaseClient } from '../cobrix/shared/infrastructure/database/database.client.ts'
 import { createCobrixDatabase } from '../cobrix/shared/infrastructure/database/database.ts'
@@ -22,6 +23,13 @@ import {
 	UpdateConfigurationUseCase,
 } from '../cobrix/features/configuration/index.ts'
 import {
+	SqliteContractRepository,
+} from '../cobrix/features/contracts/index.ts'
+import {
+	SqliteInvoiceRepository,
+} from '../cobrix/features/invoices/index.ts'
+import {
+	CustomerDossierEnricherService,
 	GetCustomerDossierUseCase,
 	ListCustomersUseCase,
 	SqliteCustomerRepository,
@@ -43,6 +51,7 @@ import {
 	GetRunDetailUseCase,
 	SqliteRunsRepository,
 } from '../cobrix/features/runs/index.ts'
+import { BackgroundScheduler, CobrixApiRouter } from '../cobrix/shared/index.ts'
 
 import {
 	CONTRACT_STATUS_TONE,
@@ -137,10 +146,15 @@ const SCREENS: Record<string, Screen> = {
 export function createApp(deps: AppDeps): Server {
 	const isOperational = Boolean(deps.cobrixDbPath)
 	let dbClient: SqliteDatabaseClient | null = null
+	let apiRouter: CobrixApiRouter | null = null
+	let scheduler: BackgroundScheduler | null = null
 
 	if (isOperational && deps.cobrixDbPath) {
 		const instance = createCobrixDatabase(deps.cobrixDbPath)
 		dbClient = new SqliteDatabaseClient(instance.db)
+		apiRouter = new CobrixApiRouter({ db: dbClient, billingApiUrl: deps.simulatorUrl })
+		scheduler = new BackgroundScheduler(dbClient)
+		scheduler.start()
 	}
 
 	function placeholder(path: string): Raw {
@@ -204,6 +218,44 @@ export function createApp(deps: AppDeps): Server {
 		}
 
 		// Operational Mode
+		if (apiRouter && apiRouter.handle(req, res)) {
+			return
+		}
+
+		// Serve compiled React SPA under /app/
+		const frontendDist = join(process.cwd(), 'frontend', 'dist')
+		if (existsSync(frontendDist) && (url.pathname === '/app' || url.pathname.startsWith('/app/'))) {
+			if (req.method !== 'GET') {
+				return send(res, 405, 'Method Not Allowed', 'text/plain')
+			}
+			if (url.pathname === '/app') {
+				res.writeHead(302, { Location: '/app/' })
+				res.end()
+				return
+			}
+			const relativeAsset = url.pathname.replace(/^\/app\//, '')
+			const assetPath = join(frontendDist, relativeAsset)
+			if (existsSync(assetPath) && !statSync(assetPath).isDirectory()) {
+				const ext = extname(assetPath).toLowerCase()
+				const mimeMap: Record<string, string> = {
+					'.html': 'text/html; charset=utf-8',
+					'.js': 'application/javascript; charset=utf-8',
+					'.css': 'text/css; charset=utf-8',
+					'.json': 'application/json; charset=utf-8',
+					'.svg': 'image/svg+xml',
+					'.png': 'image/png',
+					'.ico': 'image/x-icon',
+				}
+				const contentType = mimeMap[ext] || 'application/octet-stream'
+				const content = readFileSync(assetPath)
+				res.writeHead(200, { 'Content-Type': contentType })
+				res.end(content)
+				return
+			}
+			const indexHtml = readFileSync(join(frontendDist, 'index.html'), 'utf8')
+			return send(res, 200, indexHtml, 'text/html; charset=utf-8')
+		}
+
 		const configRepo = new SqliteConfigurationRepository(dbClient)
 		const getConfigUseCase = new GetConfigurationUseCase(configRepo)
 		const updateConfigUseCase = new UpdateConfigurationUseCase(configRepo)
@@ -212,9 +264,12 @@ export function createApp(deps: AppDeps): Server {
 		const getRecentRunsUseCase = new GetRecentRunsUseCase(runsRepo)
 		const getRunDetailUseCase = new GetRunDetailUseCase(runsRepo)
 
+		const contractRepo = new SqliteContractRepository(dbClient)
+		const invoiceRepo = new SqliteInvoiceRepository(dbClient)
 		const customerRepo = new SqliteCustomerRepository(dbClient)
-		const listCustomersUseCase = new ListCustomersUseCase(customerRepo)
-		const getCustomerDossierUseCase = new GetCustomerDossierUseCase(customerRepo)
+		const customerEnricher = new CustomerDossierEnricherService()
+		const listCustomersUseCase = new ListCustomersUseCase(customerRepo, contractRepo, invoiceRepo, customerEnricher)
+		const getCustomerDossierUseCase = new GetCustomerDossierUseCase(customerRepo, contractRepo, invoiceRepo, customerEnricher)
 
 		const config = await getConfigUseCase.execute()
 		const company = config.companyName
@@ -875,6 +930,9 @@ export function createApp(deps: AppDeps): Server {
 	})
 
 	server.on('close', () => {
+		if (scheduler) {
+			scheduler.stop()
+		}
 		if (dbClient) {
 			dbClient.close()
 		}

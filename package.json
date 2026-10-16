@@ -11,7 +11,9 @@
 		"start": "node --disable-warning=ExperimentalWarning src/main.ts",
 		"seed": "node --disable-warning=ExperimentalWarning src/billing-api/seed.ts",
 		"test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.ts\"",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"frontend:build": "pnpm -C frontend build",
+		"frontend:dev": "pnpm -C frontend dev"
 	},
 	"devDependencies": {
 		"@types/node": "24.3.0",

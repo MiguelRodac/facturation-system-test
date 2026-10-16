@@ -1,6 +1,20 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Database files (exclude write-ahead logs and shared memory)
 data/*.sqlite-wal
 data/*.sqlite-shm
+data/cobrix.sqlite
+
+# Logs
 *.log
+
+# macOS specific
 .DS_Store
+
+# Other exclusions
 .engram
+.env
+*.env
+dist
+!frontend/dist/

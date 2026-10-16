@@ -2,6 +2,7 @@
  * ISP Payment Billing API Adapter (Anti-Corruption Layer)
  *
  * Implements PaymentBillingApiPort by delegating to BillingApiClient.
+ * Supports static client or dynamic provider function.
  */
 
 import type { BillingApiClient } from '../../../shared/infrastructure/billing-api.client.ts'
@@ -11,14 +12,18 @@ import type {
 } from '../domain/payment-billing-api.port.ts'
 
 export class IspPaymentBillingApiAdapter implements PaymentBillingApiPort {
-	private readonly client: BillingApiClient
+	private readonly getClient: () => BillingApiClient
 
-	constructor(client: BillingApiClient) {
-		this.client = client
+	constructor(clientOrProvider: BillingApiClient | (() => BillingApiClient)) {
+		if (typeof clientOrProvider === 'function') {
+			this.getClient = clientOrProvider
+		} else {
+			this.getClient = () => clientOrProvider
+		}
 	}
 
 	async fetchPaymentBook(contractId: number): Promise<readonly PaymentBookRow[]> {
-		const rawItems = await this.client.getPaymentInformation(contractId)
+		const rawItems = await this.getClient().getPaymentInformation(contractId)
 		if (!rawItems || !Array.isArray(rawItems)) return []
 
 		return rawItems.map(item => ({
