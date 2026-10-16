@@ -134,13 +134,13 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
           <span className="metric-value mono" style={{ color: totals.total_debt > 0 ? '#b45309' : '#047857' }}>
             ${totals.total_debt.toFixed(2)}
           </span>
-          <span className="metric-sub">{totals.open_invoices_count} facturas abiertas</span>
+          <span className="metric-sub">{totals.open_count} facturas abiertas</span>
         </div>
 
         <div className="metric-card">
           <span className="metric-label">Facturas Conciliadas</span>
           <span className="metric-value mono" style={{ color: '#047857' }}>
-            {totals.paid_invoices_count}
+            {totals.paid_count}
           </span>
           <span className="metric-sub">Pagadas en el ISP</span>
         </div>
@@ -191,14 +191,14 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
                 onClick={() => setInvoiceFilter('open')}
               >
-                Abiertas ({totals.open_invoices_count})
+                Abiertas ({totals.open_count})
               </button>
               <button
                 className={`btn ${invoiceFilter === 'paid' ? 'btn-primary' : 'btn-secondary'}`}
                 style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
                 onClick={() => setInvoiceFilter('paid')}
               >
-                Pagadas ({totals.paid_invoices_count})
+                Pagadas ({totals.paid_count})
               </button>
             </div>
             <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
@@ -227,8 +227,8 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 </thead>
                 <tbody>
                   {filteredInvoices.map((inv) => (
-                    <tr key={inv.installment_id}>
-                      <td className="mono">{inv.installment_id}</td>
+                    <tr key={inv.id || inv.external_installment_id}>
+                      <td className="mono">{inv.external_installment_id}</td>
                       <td style={{ fontWeight: 600 }}>{inv.period}</td>
                       <td className="mono" style={{ fontSize: '0.8rem' }}>{inv.due_date}</td>
                       <td className="mono" style={{ fontSize: '0.8rem' }}>{inv.cutoff_date}</td>
@@ -247,9 +247,9 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                         )}
                       </td>
                       <td>
-                        {inv.receipt_number ? (
+                        {inv.paid_by_invoice_number ? (
                           <div style={{ fontSize: '0.8rem' }}>
-                            <span className="mono" style={{ fontWeight: 600 }}>#{inv.receipt_number}</span>
+                            <span className="mono" style={{ fontWeight: 600 }}>#{inv.paid_by_invoice_number}</span>
                             {inv.paid_at && <div style={{ color: 'var(--text-muted)' }}>{inv.paid_at}</div>}
                           </div>
                         ) : (

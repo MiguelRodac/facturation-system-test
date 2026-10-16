@@ -5,7 +5,9 @@
  */
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
-import type { CustomerEntity, ContractEntity, InvoiceEntity } from '../domain/import.entities.ts'
+import type { CustomerEntity } from '../../customers/domain/customer.entities.ts'
+import type { ContractEntity } from '../../contracts/domain/contract.entity.ts'
+import type { InvoiceEntity } from '../../invoices/domain/invoice.entity.ts'
 import type {
 	ImportRepositoryPort,
 	RecordSyncRunInput,

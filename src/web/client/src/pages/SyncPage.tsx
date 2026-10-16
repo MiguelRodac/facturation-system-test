@@ -161,9 +161,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                   <th>Estado</th>
                   <th>Inicio</th>
                   <th>Duración</th>
-                  <th>Procesados</th>
-                  <th>Creados / Pagados</th>
-                  <th>Fallidos</th>
+                  <th>Resumen de Corrida</th>
                   <th>Acción</th>
                 </tr>
               </thead>
@@ -190,14 +188,14 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                       {r.started_at ? r.started_at.replace('T', ' ').split('.')[0] : '—'}
                     </td>
                     <td className="mono" style={{ fontSize: '0.8rem' }}>
-                      {r.duration_seconds}s
+                      {r.duration_seconds !== undefined
+                        ? `${r.duration_seconds}s`
+                        : r.started_at && r.finished_at
+                          ? `${Math.max(0, Math.round((new Date(r.finished_at).getTime() - new Date(r.started_at).getTime()) / 1000))}s`
+                          : '—'}
                     </td>
-                    <td className="mono">{r.counts.total}</td>
-                    <td className="mono" style={{ color: '#047857', fontWeight: 600 }}>
-                      {r.type === 'IMPORT' ? r.counts.created : r.counts.paid}
-                    </td>
-                    <td className="mono" style={{ color: r.counts.failed > 0 ? '#b91c1c' : 'inherit' }}>
-                      {r.counts.failed}
+                    <td style={{ fontSize: '0.8125rem' }}>
+                      {r.summary || 'Corrida completada exitosamente.'}
                     </td>
                     <td>
                       <button
@@ -234,7 +232,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
         ) : runDetail ? (
           <div>
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', border: '1px solid var(--border-light)' }}>
-              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', flexWrap: 'wrap' }}>
                 <div>
                   <strong>Tipo:</strong> {runDetail.run.type}
                 </div>
@@ -248,6 +246,15 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
               <div style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                 <strong>Resumen:</strong> {runDetail.run.summary}
               </div>
+              {runDetail.counters && Object.keys(runDetail.counters).length > 0 && (
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                  {Object.entries(runDetail.counters).map(([key, count]) => (
+                    <Badge key={key} variant="neutral">
+                      {key}: {count}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {runDetail.items.length === 0 ? (
@@ -270,10 +277,12 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                   <tbody>
                     {runDetail.items.map((item) => (
                       <tr key={item.id}>
-                        <td className="mono">{item.contract_id}</td>
-                        <td className="mono">{item.installment_id}</td>
-                        <td style={{ fontWeight: 600 }}>{item.period}</td>
-                        <td className="mono">${item.amount.toFixed(2)}</td>
+                        <td className="mono">{item.contract_id ?? '—'}</td>
+                        <td className="mono">{item.installment_id ?? '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{item.period ?? '—'}</td>
+                        <td className="mono">
+                          {item.amount != null ? `$${item.amount.toFixed(2)}` : '—'}
+                        </td>
                         <td>
                           <Badge
                             variant={

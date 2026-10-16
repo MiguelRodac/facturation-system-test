@@ -4,6 +4,7 @@
  * Maps raw database rows from company_config table to ConfigurationEntity domain models.
  */
 
+import { Identification } from '../../../shared/domain/identification.vo.ts'
 import type { ConfigurationEntity } from '../domain/configuration.entity.ts'
 
 export interface ConfigRow {
@@ -53,7 +54,7 @@ export class ConfigurationMapper {
 		return {
 			id: row.id,
 			companyName: row.company_name,
-			companyTaxId: row.company_tax_id,
+			companyTaxId: Identification.parse(row.company_tax_id)?.value ?? row.company_tax_id,
 			billingEmail: row.billing_email,
 			apiUrl: row.api_url,
 			apiUser: row.api_user,

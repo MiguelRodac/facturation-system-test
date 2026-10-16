@@ -13,11 +13,13 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
   return (
     <div className="timeline">
       {items.map((item, idx) => {
-        const isPaid = item.type.includes('PAYMENT') || item.type.includes('PAID')
+        const isOk = item.tone === 'ok'
+        const isWarn = item.tone === 'warn'
+        const isInfo = item.tone === 'info'
         return (
           <div key={idx} className="timeline-item">
-            <div className={`timeline-dot ${isPaid ? 'paid' : ''}`}>
-              {isPaid ? '✓' : '•'}
+            <div className={`timeline-dot ${isOk ? 'paid' : isWarn ? 'warn' : isInfo ? 'info' : ''}`}>
+              {isOk ? '✓' : isWarn ? '!' : '•'}
             </div>
             <div className="timeline-content">
               <div className="timeline-header">
@@ -27,16 +29,6 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                 {item.description}
               </p>
-              {item.amount !== undefined && (
-                <div style={{ marginTop: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                  Monto: <span className="mono">${item.amount.toFixed(2)} USD</span>
-                  {item.receipt_number && (
-                    <span style={{ marginLeft: '1rem', color: 'var(--text-muted)' }}>
-                      Recibo: <span className="mono">{item.receipt_number}</span>
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )

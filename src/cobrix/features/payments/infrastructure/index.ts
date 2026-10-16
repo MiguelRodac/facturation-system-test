@@ -1,4 +1,4 @@
-export * from './sqlite-payment.repository.ts'
+export * from './payment.repository.ts'
 export * from './payment.mapper.ts'
 export * from './isp-payment-billing-api.adapter.ts'
 export * from './payment.controller.ts'

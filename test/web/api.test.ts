@@ -52,7 +52,11 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 	after(async () => {
 		await new Promise(resolve => panel.close(resolve))
 		await billingApi.close()
-		rmSync(dir, { recursive: true, force: true })
+		try {
+			rmSync(dir, { recursive: true, force: true })
+		} catch {
+			// Ignore Windows temporary file lock
+		}
 	})
 
 	it('GET /api/v1/openapi.json returns OpenAPI 3.0 specification', async () => {
@@ -190,6 +194,23 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.equal(res.status, 200)
 		const body = await res.json() as { data: Array<{ id: number; type: string; status: string }> }
 		assert.ok(body.data.length >= 2)
+	})
+
+	it('PUT /api/v1/config returns 422 RFC 9457 ValidationError for invalid payload', async () => {
+		const res = await fetch(`${apiUrl}/api/v1/config`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				auto_run_hour: 'invalid-hour',
+				grace_days: -10,
+			}),
+		})
+		assert.equal(res.status, 422)
+		assert.equal(res.headers.get('content-type'), 'application/problem+json')
+		const problem = await res.json() as { status: number; title: string; errors: Array<{ field: string; message: string }> }
+		assert.equal(problem.status, 422)
+		assert.equal(problem.title, 'Validation Error')
+		assert.ok(problem.errors.some(e => e.field.includes('auto_run_hour')))
 	})
 
 	it('GET /app/ serves compiled React SPA index.html', async () => {

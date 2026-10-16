@@ -3,7 +3,7 @@
  * Maps between SQLite InvoiceRow and OpenInvoiceRecord domain model
  */
 
-import type { OpenInvoiceRecord } from '../domain/payment.repository.ts'
+import type { OpenInvoiceRecord } from '../domain/payment.entities.ts'
 
 export interface PaymentInvoiceRow {
 	id: number

@@ -49,7 +49,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
   testConnection: () =>
-    request<{ connected: boolean; message: string; http_status: number }>('/config/test-connection', {
+    request<{ connected: boolean; ok?: boolean; message: string; total_contracts?: number }>('/config/test-connection', {
       method: 'POST',
     }),
 

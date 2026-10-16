@@ -50,17 +50,14 @@ export class ConfigurationController {
 
 	testConnection = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 		try {
-			const body = (req.body || {}) as Record<string, unknown>
-			const result = await this.testConnectionUseCase.execute({
-				apiUrl: typeof body.api_url === 'string' ? body.api_url : undefined,
-				apiUser: typeof body.api_user === 'string' ? body.api_user : undefined,
-				apiPassword: typeof body.api_password === 'string' ? body.api_password : undefined,
-			})
+			const input = ConfigurationRequestMapper.toTestConnectionInput(req.body || {})
+			const result = await this.testConnectionUseCase.execute(input)
 			res.status(200).json({
 				ok: result.ok,
 				message: result.message,
 				data: {
 					connected: result.ok,
+					ok: result.ok,
 					message: result.message,
 					total_contracts: result.totalContracts,
 				},

@@ -5,8 +5,8 @@
  */
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
+import type { OpenInvoiceRecord } from '../domain/payment.entities.ts'
 import type {
-	OpenInvoiceRecord,
 	PaymentRepositoryPort,
 	RecordPaymentSyncRunInput,
 } from '../domain/payment.repository.ts'

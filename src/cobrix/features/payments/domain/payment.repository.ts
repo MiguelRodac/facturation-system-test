@@ -4,18 +4,7 @@
  * Defines persistence operations for reading open invoices and updating reconciled payments.
  */
 
-import type { PaymentEvaluationItem } from './payment.entities.ts'
-
-export interface OpenInvoiceRecord {
-	readonly id: number
-	readonly externalInstallmentId: string
-	readonly contractId: number
-	readonly customerId: string
-	readonly period: string
-	readonly totalAmount: number
-	readonly balance: number
-	readonly status: 'OPEN' | 'PAID'
-}
+import type { OpenInvoiceRecord, PaymentEvaluationItem } from './payment.entities.ts'
 
 export interface RecordPaymentSyncRunInput {
 	readonly isSimulation: boolean

@@ -16,17 +16,27 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     api_url: '',
     api_user: '',
     api_password: '',
-    importable_statuses: '',
+    importable_statuses: ['ACTIVO', 'CORTADO'],
+    import_window_months: null,
+    max_recent_installments: null,
     grace_days: 5,
+    max_new_invoices: null,
+    max_new_amount: null,
+    excluded_doc_types: [],
     auto_run_hour: '03:00',
+    auto_run_enabled: false,
   })
+
+  const [importableStatusesInput, setImportableStatusesInput] = useState('ACTIVO, CORTADO')
+  const [excludedDocsInput, setExcludedDocsInput] = useState('')
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{
     connected: boolean
     message: string
-    http_status: number
+    total_contracts?: number
   } | null>(null)
 
   useEffect(() => {
@@ -35,6 +45,12 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
         setLoading(true)
         const data = await api.getConfig()
         setConfig(data)
+        if (Array.isArray(data.importable_statuses)) {
+          setImportableStatusesInput(data.importable_statuses.join(', '))
+        }
+        if (Array.isArray(data.excluded_doc_types)) {
+          setExcludedDocsInput(data.excluded_doc_types.join(', '))
+        }
       } catch (err: unknown) {
         notify((err as Error).message, 'error')
       } finally {
@@ -44,18 +60,19 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     loadConfig()
   }, [notify])
 
-  const handleChange = (field: keyof CompanyConfig, value: string | number) => {
-    setConfig((prev) => ({ ...prev, [field]: value }))
-  }
-
   const handleTestConnection = async () => {
     try {
       setTesting(true)
       setConnectionResult(null)
       const res = await api.testConnection()
-      setConnectionResult(res)
-      if (res.connected) {
-        notify(`Conexión exitosa con el ISP (HTTP ${res.http_status}): ${res.message}`, 'success')
+      const isConnected = Boolean(res.connected || res.ok)
+      setConnectionResult({
+        connected: isConnected,
+        message: res.message,
+        total_contracts: res.total_contracts,
+      })
+      if (isConnected) {
+        notify(`Conexión exitosa con el ISP: ${res.message}`, 'success')
       } else {
         notify(`Fallo en conexión: ${res.message}`, 'error')
       }
@@ -70,6 +87,15 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     e.preventDefault()
     try {
       setSaving(true)
+      const importableStatuses = importableStatusesInput
+        .split(',')
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean)
+      const excludedDocs = excludedDocsInput
+        .split(',')
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean)
+
       const updated = await api.updateConfig({
         company_name: config.company_name,
         company_tax_id: config.company_tax_id,
@@ -77,11 +103,23 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
         api_url: config.api_url,
         api_user: config.api_user,
         api_password: config.api_password || undefined,
-        importable_statuses: config.importable_statuses,
+        importable_statuses: importableStatuses,
+        excluded_doc_types: excludedDocs,
         grace_days: Number(config.grace_days),
+        import_window_months: config.import_window_months ? Number(config.import_window_months) : null,
+        max_recent_installments: config.max_recent_installments ? Number(config.max_recent_installments) : null,
+        max_new_invoices: config.max_new_invoices ? Number(config.max_new_invoices) : null,
+        max_new_amount: config.max_new_amount ? Number(config.max_new_amount) : null,
         auto_run_hour: config.auto_run_hour,
+        auto_run_enabled: config.auto_run_enabled,
       })
       setConfig(updated)
+      if (Array.isArray(updated.importable_statuses)) {
+        setImportableStatusesInput(updated.importable_statuses.join(', '))
+      }
+      if (Array.isArray(updated.excluded_doc_types)) {
+        setExcludedDocsInput(updated.excluded_doc_types.join(', '))
+      }
       onConfigUpdated(updated.company_name)
       notify('Configuración guardada exitosamente.', 'success')
     } catch (err: unknown) {
@@ -121,7 +159,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                   type="text"
                   className="form-input"
                   value={config.company_name}
-                  onChange={(e) => handleChange('company_name', e.target.value)}
+                  onChange={(e) => setConfig({ ...config, company_name: e.target.value })}
                   required
                 />
               </div>
@@ -133,7 +171,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     type="text"
                     className="form-input mono"
                     value={config.company_tax_id}
-                    onChange={(e) => handleChange('company_tax_id', e.target.value)}
+                    onChange={(e) => setConfig({ ...config, company_tax_id: e.target.value })}
                     required
                   />
                 </div>
@@ -143,26 +181,40 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     type="email"
                     className="form-input"
                     value={config.billing_email}
-                    onChange={(e) => handleChange('billing_email', e.target.value)}
+                    onChange={(e) => setConfig({ ...config, billing_email: e.target.value })}
                     required
                   />
                 </div>
               </div>
             </Card>
 
-            <Card title="Reglas y Políticas de Facturación">
+            <Card title="Reglas y Filtros de Importación">
               <div className="form-group">
                 <label className="form-label">Estados de Contrato Importables</label>
                 <input
                   type="text"
                   className="form-input mono"
-                  value={config.importable_statuses}
-                  onChange={(e) => handleChange('importable_statuses', e.target.value)}
-                  placeholder="ACTIVO,CORTADO"
+                  value={importableStatusesInput}
+                  onChange={(e) => setImportableStatusesInput(e.target.value)}
+                  placeholder="ACTIVO, CORTADO"
                   required
                 />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   Separados por coma. Contratos en otros estados (ej. RETIRADO) serán ignorados.
+                </span>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tipos de Documento Excluidos</label>
+                <input
+                  type="text"
+                  className="form-input mono"
+                  value={excludedDocsInput}
+                  onChange={(e) => setExcludedDocsInput(e.target.value)}
+                  placeholder="J, G (opcional)"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Separados por coma (ej. J, G). Déjelo vacío para importar todos los tipos.
                 </span>
               </div>
 
@@ -175,7 +227,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     max="30"
                     className="form-input mono"
                     value={config.grace_days}
-                    onChange={(e) => handleChange('grace_days', Number(e.target.value))}
+                    onChange={(e) => setConfig({ ...config, grace_days: Number(e.target.value) })}
                     required
                   />
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -184,19 +236,90 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Hora de Corrida Automática</label>
+                  <label className="form-label">Ventana Deslizante (Meses)</label>
                   <input
-                    type="text"
+                    type="number"
+                    min="1"
                     className="form-input mono"
-                    value={config.auto_run_hour}
-                    onChange={(e) => handleChange('auto_run_hour', e.target.value)}
-                    placeholder="03:00"
-                    required
+                    value={config.import_window_months ?? ''}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        import_window_months: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
+                    placeholder="Sin límite"
                   />
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Formato HH:MM (ej. 03:00).
+                    Meses hacia atrás a importar (vacío = sin límite).
                   </span>
                 </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Tope Máx. Facturas Nuevas</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-input mono"
+                    value={config.max_new_invoices ?? ''}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        max_new_invoices: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
+                    placeholder="Sin límite"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tope Máx. Monto Nuevo (USD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="form-input mono"
+                    value={config.max_new_amount ?? ''}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        max_new_amount: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
+                    placeholder="Sin límite"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            <Card title="Programación de Corrida Automática">
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <input
+                  type="checkbox"
+                  id="auto_run_enabled"
+                  checked={config.auto_run_enabled}
+                  onChange={(e) => setConfig({ ...config, auto_run_enabled: e.target.checked })}
+                  style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }}
+                />
+                <label htmlFor="auto_run_enabled" style={{ fontWeight: 600, cursor: 'pointer' }}>
+                  Habilitar sincronización automática diaria en background
+                </label>
+              </div>
+
+              <div className="form-group" style={{ maxWidth: '200px' }}>
+                <label className="form-label">Hora de Ejecución (HH:MM)</label>
+                <input
+                  type="text"
+                  className="form-input mono"
+                  value={config.auto_run_hour ?? '03:00'}
+                  onChange={(e) => setConfig({ ...config, auto_run_hour: e.target.value })}
+                  placeholder="03:00"
+                  pattern="^([01]\d|2[0-3]):([0-5]\d)$"
+                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Zona horaria America/Caracas.
+                </span>
               </div>
             </Card>
           </div>
@@ -210,7 +333,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                   type="url"
                   className="form-input mono"
                   value={config.api_url}
-                  onChange={(e) => handleChange('api_url', e.target.value)}
+                  onChange={(e) => setConfig({ ...config, api_url: e.target.value })}
                   placeholder="http://127.0.0.1:4310"
                   required
                 />
@@ -222,7 +345,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                   type="text"
                   className="form-input mono"
                   value={config.api_user}
-                  onChange={(e) => handleChange('api_user', e.target.value)}
+                  onChange={(e) => setConfig({ ...config, api_user: e.target.value })}
                   required
                 />
               </div>
@@ -233,7 +356,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                   type="password"
                   className="form-input mono"
                   value={config.api_password || ''}
-                  onChange={(e) => handleChange('api_password', e.target.value)}
+                  onChange={(e) => setConfig({ ...config, api_password: e.target.value })}
                   placeholder="•••••••••••• (dejar vacío para mantener)"
                 />
               </div>
@@ -260,8 +383,16 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     border: `1px solid ${connectionResult.connected ? '#a7f3d0' : '#fecaca'}`,
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: connectionResult.connected ? '#047857' : '#b91c1c' }}>
-                    {connectionResult.connected ? '✅ Conexión Exitosa' : '❌ Error de Conexión'} (HTTP {connectionResult.http_status})
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: '0.875rem',
+                      color: connectionResult.connected ? '#047857' : '#b91c1c',
+                    }}
+                  >
+                    {connectionResult.connected ? '✅ Conexión Exitosa' : '❌ Error de Conexión'}
+                    {connectionResult.total_contracts !== undefined &&
+                      ` (${connectionResult.total_contracts} contratos disponibles)`}
                   </div>
                   <div style={{ fontSize: '0.8125rem', marginTop: '0.25rem', color: 'var(--text-secondary)' }}>
                     {connectionResult.message}

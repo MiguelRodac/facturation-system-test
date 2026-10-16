@@ -10,8 +10,7 @@
  */
 
 import type { PaymentBookRow } from './payment-billing-api.port.ts'
-import type { PaymentEvaluationItem } from './payment.entities.ts'
-import type { OpenInvoiceRecord } from './payment.repository.ts'
+import type { OpenInvoiceRecord, PaymentEvaluationItem } from './payment.entities.ts'
 
 export class PaymentEvaluatorService {
 	/**
