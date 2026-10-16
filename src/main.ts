@@ -25,6 +25,13 @@ const host = process.env.HOST ?? '127.0.0.1'
 
 if (!existsSync(billingApiDb)) seedBillingApi(billingApiDb)
 
+const distWebIndex = resolve(root, 'dist/web/index.html')
+if (!existsSync(distWebIndex)) {
+	console.log('⚡ Compilando frontend React SPA...')
+	const { execSync } = await import('node:child_process')
+	execSync('pnpm run frontend:build', { cwd: root, stdio: 'inherit' })
+}
+
 const billingApi = createBillingApiServer(billingApiDb)
 await billingApi.listen(billingApiPort, host)
 const simulatorUrl = `http://${host}:${billingApiPort}`

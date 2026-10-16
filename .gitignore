@@ -16,5 +16,5 @@ data/cobrix.sqlite
 .engram
 .env
 *.env
-dist
+dist/*
 !dist/web/

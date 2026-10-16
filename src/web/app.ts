@@ -110,10 +110,20 @@ export function createApp(deps: AppDeps): Server {
 			}
 		}
 
-		// 4. Static Assets (/assets/*)
+		// 4. Static Assets (/assets/*, /app/assets/*, or direct files)
 		if (path.startsWith('/assets/')) {
 			const assetPath = join(distWebDir, path)
 			if (serveFile(res, assetPath)) return
+		}
+		if (path.startsWith('/app/assets/')) {
+			const assetPath = join(distWebDir, path.replace('/app', ''))
+			if (serveFile(res, assetPath)) return
+		}
+		if (path !== '/') {
+			const directFile = join(distWebDir, path)
+			if (existsSync(directFile) && statSync(directFile).isFile()) {
+				if (serveFile(res, directFile)) return
+			}
 		}
 
 		// 5. React SPA (/app/*, /, /clientes*, /sincronizacion*, /configuracion*)

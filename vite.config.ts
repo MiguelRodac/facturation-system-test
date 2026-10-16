@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 export default defineConfig({
   plugins: [react()],
   root: 'src/web/client',
-  base: '/app/',
+  base: '/',
   build: {
     outDir: resolve(process.cwd(), 'dist/web'),
     emptyOutDir: true,
