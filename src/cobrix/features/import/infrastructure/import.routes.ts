@@ -1,24 +1,18 @@
 /**
- * Import Routes Dispatcher
+ * Import Express Router
  * Routes:
  *   POST /api/v1/sync/import?simulate=true|false
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Router } from 'express'
 import type { ImportController } from './import.controller.ts'
 
-export function dispatchImportRoutes(
-	req: IncomingMessage,
-	res: ServerResponse,
-	pathname: string,
-	url: URL,
-	controller: ImportController
-): boolean {
-	if (req.method === 'POST' && pathname === '/api/v1/sync/import') {
-		const simulate = url.searchParams.get('simulate') === 'true'
-		void controller.import(req, res, simulate)
-		return true
-	}
+export function createImportRouter(controller: ImportController): Router {
+	const router = Router()
 
-	return false
+	router.post('/import', (req, res, next) => {
+		void controller.import(req, res, next)
+	})
+
+	return router
 }

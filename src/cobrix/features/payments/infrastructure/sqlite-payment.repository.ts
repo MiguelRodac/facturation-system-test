@@ -10,17 +10,7 @@ import type {
 	PaymentRepositoryPort,
 	RecordPaymentSyncRunInput,
 } from '../domain/payment.repository.ts'
-
-interface InvoiceRow {
-	id: number
-	external_installment_id: string
-	contract_id: number
-	customer_id: string
-	period: string
-	total_amount: number
-	balance: number
-	status: 'OPEN' | 'PAID'
-}
+import { PaymentMapper, type PaymentInvoiceRow } from './payment.mapper.ts'
 
 export class SqlitePaymentRepository implements PaymentRepositoryPort {
 	private readonly db: DatabaseClient
@@ -37,7 +27,7 @@ export class SqlitePaymentRepository implements PaymentRepositoryPort {
 	}
 
 	async getOpenInvoicesByContract(contractId: number): Promise<readonly OpenInvoiceRecord[]> {
-		const rows = await this.db.query<InvoiceRow>(
+		const rows = await this.db.query<PaymentInvoiceRow>(
 			`SELECT id, external_installment_id, contract_id, customer_id, period,
 			        total_amount, balance, status
 			 FROM invoice
@@ -46,16 +36,7 @@ export class SqlitePaymentRepository implements PaymentRepositoryPort {
 			[contractId],
 		)
 
-		return rows.map(r => ({
-			id: r.id,
-			externalInstallmentId: r.external_installment_id,
-			contractId: r.contract_id,
-			customerId: r.customer_id,
-			period: r.period,
-			totalAmount: r.total_amount,
-			balance: r.balance,
-			status: r.status,
-		}))
+		return rows.map(PaymentMapper.toOpenInvoiceRecord)
 	}
 
 	async markInvoicePaid(

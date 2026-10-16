@@ -1,24 +1,18 @@
 /**
- * Payment Routes Dispatcher
+ * Payment Express Router
  * Routes:
  *   POST /api/v1/sync/reconcile?simulate=true|false
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Router } from 'express'
 import type { PaymentController } from './payment.controller.ts'
 
-export function dispatchPaymentRoutes(
-	req: IncomingMessage,
-	res: ServerResponse,
-	pathname: string,
-	url: URL,
-	controller: PaymentController
-): boolean {
-	if (req.method === 'POST' && pathname === '/api/v1/sync/reconcile') {
-		const simulate = url.searchParams.get('simulate') === 'true'
-		void controller.reconcile(req, res, simulate)
-		return true
-	}
+export function createPaymentRouter(controller: PaymentController): Router {
+	const router = Router()
 
-	return false
+	router.post('/reconcile', (req, res, next) => {
+		void controller.reconcile(req, res, next)
+	})
+
+	return router
 }

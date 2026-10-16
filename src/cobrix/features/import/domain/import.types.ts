@@ -4,7 +4,7 @@
 
 import type { Money } from '../../../shared/domain/money.vo.ts'
 import type { Period } from '../../../shared/domain/period.vo.ts'
-import type { CustomerEntity, ContractEntity } from './import.entities.ts'
+import type { ConfigurationEntity } from '../../configuration/domain/configuration.entity.ts'
 
 export type EvaluationResult =
 	| 'IMPORTED'
@@ -51,4 +51,10 @@ export interface ImportSummary {
 	readonly items: readonly InstallmentEvaluationItem[]
 	readonly isSimulation: boolean
 	readonly runId?: number
+}
+
+export interface ImportOptions {
+	readonly isSimulation?: boolean
+	readonly configOverride?: Partial<ConfigurationEntity>
+	readonly referenceDate?: Date
 }

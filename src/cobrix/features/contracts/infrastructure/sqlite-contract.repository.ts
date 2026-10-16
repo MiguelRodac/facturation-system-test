@@ -5,17 +5,7 @@
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
 import type { ContractEntity, ContractRepositoryPort } from '../domain/index.ts'
-
-interface ContractRow {
-	id: number
-	code: string
-	customer_id: string
-	status: string
-	plan_name: string
-	plan_price: number
-	branch_name: string | null
-	created_at?: string
-}
+import { ContractMapper, type ContractRow } from './contract.mapper.ts'
 
 export class SqliteContractRepository implements ContractRepositoryPort {
 	private readonly db: DatabaseClient
@@ -32,16 +22,7 @@ export class SqliteContractRepository implements ContractRepositoryPort {
 			ORDER BY id ASC
 		`
 		const rows = this.db.query<ContractRow>(sql, [customerId])
-		return rows.map(r => ({
-			id: r.id,
-			code: r.code,
-			customerId: r.customer_id,
-			status: r.status,
-			planName: r.plan_name,
-			planPrice: Number(r.plan_price),
-			branchName: r.branch_name,
-			createdAt: r.created_at,
-		}))
+		return rows.map(ContractMapper.toDomain)
 	}
 
 	async countByCustomerId(customerId: string): Promise<number> {
@@ -56,17 +37,8 @@ export class SqliteContractRepository implements ContractRepositoryPort {
 			FROM contract
 			WHERE id = ?
 		`
-		const r = this.db.queryOne<ContractRow>(sql, [id])
-		if (!r) return null
-		return {
-			id: r.id,
-			code: r.code,
-			customerId: r.customer_id,
-			status: r.status,
-			planName: r.plan_name,
-			planPrice: Number(r.plan_price),
-			branchName: r.branch_name,
-			createdAt: r.created_at,
-		}
+		const row = this.db.queryOne<ContractRow>(sql, [id])
+		if (!row) return null
+		return ContractMapper.toDomain(row)
 	}
 }

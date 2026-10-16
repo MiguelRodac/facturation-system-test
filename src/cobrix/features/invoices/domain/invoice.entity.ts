@@ -4,7 +4,7 @@
  */
 
 export interface InvoiceEntity {
-	id: number
+	id?: number
 	externalInstallmentId: string
 	contractId: number
 	customerId: string
@@ -14,9 +14,9 @@ export interface InvoiceEntity {
 	totalAmount: number
 	balance: number
 	status: 'OPEN' | 'PAID'
-	paidAt: string | null
-	paidByInvoiceNumber: string | null
-	isPartialPayment: boolean
+	paidAt?: string | null
+	paidByInvoiceNumber?: string | null
+	isPartialPayment?: boolean
 	importedAt: string
 }
 

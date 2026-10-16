@@ -5,31 +5,7 @@
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
 import type { CustomerInvoiceSummary, InvoiceEntity, InvoiceRepositoryPort } from '../domain/index.ts'
-
-interface InvoiceRow {
-	id: number
-	external_installment_id: string
-	contract_id: number
-	customer_id: string
-	period: string
-	due_date: string
-	cutoff_date: string
-	total_amount: number
-	balance: number
-	status: 'OPEN' | 'PAID'
-	paid_at: string | null
-	paid_by_invoice_number: string | null
-	is_partial_payment: number
-	imported_at: string
-}
-
-interface SummaryRow {
-	customer_id: string
-	open_count: number
-	paid_count: number
-	total_debt: number
-	oldest_due_date: string | null
-}
+import { InvoiceMapper, type InvoiceRow, type SummaryRow } from './invoice.mapper.ts'
 
 export class SqliteInvoiceRepository implements InvoiceRepositoryPort {
 	private readonly db: DatabaseClient
@@ -48,7 +24,7 @@ export class SqliteInvoiceRepository implements InvoiceRepositoryPort {
 			ORDER BY period ASC, id ASC
 		`
 		const rows = this.db.query<InvoiceRow>(sql, [customerId])
-		return rows.map(r => this.toEntity(r))
+		return rows.map(InvoiceMapper.toDomain)
 	}
 
 	async findSummaries(): Promise<Map<string, CustomerInvoiceSummary>> {
@@ -65,13 +41,7 @@ export class SqliteInvoiceRepository implements InvoiceRepositoryPort {
 		const rows = this.db.query<SummaryRow>(sql)
 		const map = new Map<string, CustomerInvoiceSummary>()
 		for (const r of rows) {
-			map.set(r.customer_id, {
-				customerId: r.customer_id,
-				openCount: Number(r.open_count),
-				paidCount: Number(r.paid_count),
-				totalDebt: Math.round(Number(r.total_debt) * 100) / 100,
-				oldestDueDate: r.oldest_due_date,
-			})
+			map.set(r.customer_id, InvoiceMapper.toSummaryDomain(r))
 		}
 		return map
 	}
@@ -90,13 +60,7 @@ export class SqliteInvoiceRepository implements InvoiceRepositoryPort {
 		`
 		const r = this.db.queryOne<SummaryRow>(sql, [customerId])
 		if (!r) return null
-		return {
-			customerId: r.customer_id,
-			openCount: Number(r.open_count),
-			paidCount: Number(r.paid_count),
-			totalDebt: Math.round(Number(r.total_debt) * 100) / 100,
-			oldestDueDate: r.oldest_due_date,
-		}
+		return InvoiceMapper.toSummaryDomain(r)
 	}
 
 	async findOpenInvoices(): Promise<InvoiceEntity[]> {
@@ -109,25 +73,6 @@ export class SqliteInvoiceRepository implements InvoiceRepositoryPort {
 			ORDER BY period ASC, id ASC
 		`
 		const rows = this.db.query<InvoiceRow>(sql)
-		return rows.map(r => this.toEntity(r))
-	}
-
-	private toEntity(r: InvoiceRow): InvoiceEntity {
-		return {
-			id: r.id,
-			externalInstallmentId: r.external_installment_id,
-			contractId: r.contract_id,
-			customerId: r.customer_id,
-			period: r.period,
-			dueDate: r.due_date,
-			cutoffDate: r.cutoff_date,
-			totalAmount: Number(r.total_amount),
-			balance: Number(r.balance),
-			status: r.status,
-			paidAt: r.paid_at,
-			paidByInvoiceNumber: r.paid_by_invoice_number,
-			isPartialPayment: Boolean(r.is_partial_payment),
-			importedAt: r.imported_at,
-		}
+		return rows.map(InvoiceMapper.toDomain)
 	}
 }

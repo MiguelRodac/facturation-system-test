@@ -2,10 +2,9 @@
  * Import REST Controller
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http'
-import { handleRFC9457Error } from '../../../shared/infrastructure/middleware/rfc9457-error-handler.ts'
+import type { NextFunction, Request, Response } from 'express'
 import { ImportResponseMapper } from '../application/import.response.mapper.ts'
-import type { ImportInstallmentsUseCase } from '../application/import.use-cases.ts'
+import type { ImportInstallmentsUseCase } from '../application/import-installments.use-case.ts'
 
 export class ImportController {
 	private readonly importUseCase: ImportInstallmentsUseCase
@@ -14,15 +13,14 @@ export class ImportController {
 		this.importUseCase = importUseCase
 	}
 
-	async import(req: IncomingMessage, res: ServerResponse, isSimulation = false): Promise<void> {
+	async import(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
+			const isSimulation = req.query.simulate === 'true'
 			const result = await this.importUseCase.execute({ isSimulation })
 			const dto = ImportResponseMapper.toDto(result)
-			res.setHeader('Content-Type', 'application/json; charset=utf-8')
-			res.writeHead(200)
-			res.end(JSON.stringify({ data: dto }))
+			res.status(200).json({ data: dto })
 		} catch (err) {
-			handleRFC9457Error(err, req, res)
+			next(err)
 		}
 	}
 }

@@ -1,22 +1,18 @@
 /**
- * Consolidated Import Use Cases (docs/ENUNCIADO.md §3.1, §3.2, §4, §5)
- * Matching pattern from myintelli-global-api (entity.use-cases.ts)
+ * Import Installments Use Case (docs/ENUNCIADO.md §3.1, §3.2, §4, §5)
+ * Single Responsibility: Execute invoice import from ISP Billing API with policy checks and persistence
  */
 
 import type { ConfigurationEntity } from '../../configuration/domain/configuration.entity.ts'
 import type { ConfigurationRepository } from '../../configuration/domain/configuration.repository.ts'
+import { ContractFactory } from '../../contracts/domain/contract.factory.ts'
+import { CustomerFactory } from '../../customers/domain/customer.factory.ts'
+import { InvoiceFactory } from '../../invoices/domain/invoice.factory.ts'
 import type { BillingApiPort } from '../domain/billing-api.port.ts'
 import { ImportCapPolicy } from '../domain/import-cap.policy.ts'
 import { ImportEvaluatorService } from '../domain/import-evaluator.service.ts'
 import type { ImportRepositoryPort } from '../domain/import.repository.ts'
-import type { ImportSummary, InstallmentEvaluationItem } from '../domain/import.types.ts'
-import { ContractFactory, CustomerFactory, InvoiceFactory } from './import.factories.ts'
-
-export interface ImportOptions {
-	readonly isSimulation?: boolean
-	readonly configOverride?: Partial<ConfigurationEntity>
-	readonly referenceDate?: Date
-}
+import type { ImportOptions, ImportSummary, InstallmentEvaluationItem } from '../domain/import.types.ts'
 
 export class ImportInstallmentsUseCase {
 	private readonly billingApi: BillingApiPort
@@ -115,8 +111,8 @@ export class ImportInstallmentsUseCase {
 					importedInvoicesCount++
 					importedAmountCents += candidate.money.cents
 
-					const customer = CustomerFactory.createFromContract(rawContract, startedAt)
-					const contract = ContractFactory.createFromContract(rawContract, customer.id)
+					const customer = CustomerFactory.createFromExternal(rawContract, startedAt)
+					const contract = ContractFactory.createFromExternal(rawContract, customer.id, startedAt)
 					importedCustomerIds.add(customer.id)
 
 					items.push({
@@ -189,20 +185,5 @@ export class ImportInstallmentsUseCase {
 
 			throw error
 		}
-	}
-}
-
-export class SimulateImportUseCase {
-	private readonly importUseCase: ImportInstallmentsUseCase
-
-	constructor(importUseCase: ImportInstallmentsUseCase) {
-		this.importUseCase = importUseCase
-	}
-
-	async execute(options: Omit<ImportOptions, 'isSimulation'> = {}): Promise<ImportSummary> {
-		return this.importUseCase.execute({
-			...options,
-			isSimulation: true,
-		})
 	}
 }

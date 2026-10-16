@@ -1,33 +1,23 @@
 /**
- * Runs Routes Dispatcher
+ * Runs Express Router
  * Routes:
  *   GET /api/v1/sync/runs
  *   GET /api/v1/sync/runs/:id
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Router } from 'express'
 import type { RunsController } from './runs.controller.ts'
 
-export function dispatchRunsRoutes(
-	req: IncomingMessage,
-	res: ServerResponse,
-	pathname: string,
-	url: URL,
-	controller: RunsController
-): boolean {
-	if (req.method === 'GET' && pathname === '/api/v1/sync/runs') {
-		const limitParam = url.searchParams.get('limit')
-		const limit = limitParam ? Number(limitParam) : 20
-		void controller.list(req, res, limit)
-		return true
-	}
+export function createRunsRouter(controller: RunsController): Router {
+	const router = Router()
 
-	const singleMatch = pathname.match(/^\/api\/v1\/sync\/runs\/(\d+)$/)
-	if (req.method === 'GET' && singleMatch) {
-		const runId = Number(singleMatch[1]!)
-		void controller.getById(req, res, runId)
-		return true
-	}
+	router.get('/runs', (req, res, next) => {
+		void controller.list(req, res, next)
+	})
 
-	return false
+	router.get('/runs/:id', (req, res, next) => {
+		void controller.getById(req, res, next)
+	})
+
+	return router
 }

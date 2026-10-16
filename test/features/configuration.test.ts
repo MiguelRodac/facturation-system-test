@@ -6,7 +6,6 @@ import {
 	GetConfigurationUseCase,
 	SqliteConfigurationRepository,
 	UpdateConfigurationUseCase,
-	DEFAULT_CONFIGURATION,
 } from '../../src/cobrix/features/configuration/index.ts'
 import { createCobrixDatabase } from '../../src/cobrix/shared/index.ts'
 import { SqliteDatabaseClient } from '../../src/cobrix/shared/infrastructure/database/database.client.ts'

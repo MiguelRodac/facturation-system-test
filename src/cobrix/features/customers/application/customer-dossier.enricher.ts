@@ -14,6 +14,7 @@ import type {
 	CustomerSummaryEntity,
 	CustomerTimelineEvent,
 } from '../domain/customer.entities.ts'
+import { CustomerDossierMapper } from './customer-dossier.mapper.ts'
 
 export class CustomerDossierEnricherService {
 	enrichDossier(
@@ -21,30 +22,8 @@ export class CustomerDossierEnricherService {
 		contracts: ContractEntity[],
 		invoices: InvoiceEntity[]
 	): CustomerDossierEntity {
-		const mappedContracts: CustomerContractEntity[] = contracts.map(c => ({
-			id: c.id,
-			code: c.code,
-			status: c.status,
-			planName: c.planName,
-			planPrice: c.planPrice,
-			branchName: c.branchName,
-		}))
-
-		const mappedInvoices: CustomerInvoiceEntity[] = invoices.map(i => ({
-			id: i.id,
-			externalInstallmentId: i.externalInstallmentId,
-			contractId: i.contractId,
-			period: i.period,
-			dueDate: i.dueDate,
-			cutoffDate: i.cutoffDate,
-			totalAmount: i.totalAmount,
-			balance: i.balance,
-			status: i.status,
-			isPartialPayment: i.isPartialPayment,
-			paidAt: i.paidAt,
-			paidByInvoiceNumber: i.paidByInvoiceNumber,
-			importedAt: i.importedAt,
-		}))
+		const mappedContracts: CustomerContractEntity[] = contracts.map(CustomerDossierMapper.toCustomerContract)
+		const mappedInvoices: CustomerInvoiceEntity[] = invoices.map(CustomerDossierMapper.toCustomerInvoice)
 
 		let totalDebt = 0
 		let openCount = 0
@@ -61,9 +40,9 @@ export class CustomerDossierEnricherService {
 
 		const timeline: CustomerTimelineEvent[] = [
 			{
-				date: customer.createdAt,
+				date: customer.createdAt ?? new Date().toISOString(),
 				title: 'Cliente creado en Cobrix',
-				description: `Importado con origen ${customer.origin}`,
+				description: `Importado con origen ${customer.origin ?? 'ISP'}`,
 				tone: 'info',
 			},
 		]
@@ -112,17 +91,7 @@ export class CustomerDossierEnricherService {
 		const summaries: CustomerSummaryEntity[] = customers.map(c => {
 			const contractsCount = contractsCountByCustomerId.get(c.id) ?? 0
 			const inv = invoiceSummaryByCustomerId.get(c.id)
-
-			return {
-				id: c.id,
-				name: c.name,
-				personType: c.personType,
-				contractsCount,
-				openInvoicesCount: inv ? inv.openCount : 0,
-				paidInvoicesCount: inv ? inv.paidCount : 0,
-				totalDebt: inv ? inv.totalDebt : 0,
-				oldestDueDate: inv ? inv.oldestDueDate : null,
-			}
+			return CustomerDossierMapper.toCustomerSummary(c, contractsCount, inv)
 		})
 
 		return summaries.sort((a, b) => {

@@ -6,6 +6,7 @@
 
 import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { NextFunction, Request, Response } from 'express'
 import { AppError, type RFC9457ProblemDetails } from '../../domain/errors/app.errors.ts'
 
 export const PROBLEM_CONTENT_TYPE = 'application/problem+json'
@@ -41,4 +42,13 @@ export function handleRFC9457Error(
 
 	res.writeHead(500)
 	res.end(JSON.stringify(payload, null, 2))
+}
+
+export function rfc9457ErrorMiddleware(
+	err: unknown,
+	req: Request,
+	res: Response,
+	_next: NextFunction
+): void {
+	handleRFC9457Error(err, req, res)
 }

@@ -1,47 +1,44 @@
 /**
  * Cobrix Central API Router
- * Dispatches all /api/v1/* routes, /api/v1/openapi.json, and /docs Swagger UI
+ * Dispatches all /api/v1/* routes, /api/v1/openapi.json, and /docs Swagger UI using Express
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import express, { type Express } from 'express'
 import {
 	ConfigurationController,
-	dispatchConfigurationRoutes,
+	createConfigurationRouter,
 	GetConfigurationUseCase,
 	SqliteConfigurationRepository,
 	TestConnectionUseCase,
 	UpdateConfigurationUseCase,
 } from '../../../features/configuration/index.ts'
+import { SqliteContractRepository } from '../../../features/contracts/index.ts'
 import {
-	SqliteContractRepository,
-} from '../../../features/contracts/index.ts'
-import {
+	createCustomerRouter,
 	CustomerController,
 	CustomerDossierEnricherService,
-	dispatchCustomerRoutes,
 	GetCustomerDossierUseCase,
 	ListCustomersUseCase,
 	SqliteCustomerRepository,
 } from '../../../features/customers/index.ts'
 import {
-	dispatchImportRoutes,
+	createImportRouter,
 	ImportController,
 	ImportInstallmentsUseCase,
 	IspBillingApiAdapter,
 	SqliteImportRepository,
 } from '../../../features/import/index.ts'
+import { SqliteInvoiceRepository } from '../../../features/invoices/index.ts'
 import {
-	SqliteInvoiceRepository,
-} from '../../../features/invoices/index.ts'
-import {
-	dispatchPaymentRoutes,
+	createPaymentRouter,
 	IspPaymentBillingApiAdapter,
 	PaymentController,
 	ReconcilePaymentsUseCase,
 	SqlitePaymentRepository,
 } from '../../../features/payments/index.ts'
 import {
-	dispatchRunsRoutes,
+	createRunsRouter,
 	GetRecentRunsUseCase,
 	GetRunDetailUseCase,
 	RunsController,
@@ -49,6 +46,7 @@ import {
 } from '../../../features/runs/index.ts'
 import { BillingApiClient } from '../billing-api.client.ts'
 import type { DatabaseClient } from '../database/database.client.ts'
+import { rfc9457ErrorMiddleware } from '../middleware/rfc9457-error-handler.ts'
 import { OPENAPI_SPEC, serveSwaggerUI } from '../openapi/openapi.ts'
 
 export interface CobrixApiRouterOptions {
@@ -57,11 +55,7 @@ export interface CobrixApiRouterOptions {
 }
 
 export class CobrixApiRouter {
-	private readonly configController: ConfigurationController
-	private readonly customerController: CustomerController
-	private readonly importController: ImportController
-	private readonly paymentController: PaymentController
-	private readonly runsController: RunsController
+	readonly app: Express
 
 	constructor(options: CobrixApiRouterOptions) {
 		const { db } = options
@@ -111,36 +105,43 @@ export class CobrixApiRouter {
 		const getRunDetailUseCase = new GetRunDetailUseCase(runsRepo)
 
 		// Controllers
-		this.configController = new ConfigurationController(getConfigUseCase, updateConfigUseCase, testConnUseCase)
-		this.customerController = new CustomerController(listCustomersUseCase, getCustomerDossierUseCase)
-		this.importController = new ImportController(importUseCase)
-		this.paymentController = new PaymentController(reconcileUseCase)
-		this.runsController = new RunsController(getRecentRunsUseCase, getRunDetailUseCase)
+		const configController = new ConfigurationController(getConfigUseCase, updateConfigUseCase, testConnUseCase)
+		const customerController = new CustomerController(listCustomersUseCase, getCustomerDossierUseCase)
+		const importController = new ImportController(importUseCase)
+		const paymentController = new PaymentController(reconcileUseCase)
+		const runsController = new RunsController(getRecentRunsUseCase, getRunDetailUseCase)
+
+		// Initialize Express App
+		this.app = express()
+		this.app.use(express.json())
+
+		// OpenAPI Spec & Swagger UI
+		this.app.get('/api/v1/openapi.json', (_req, res) => {
+			res.status(200).json(OPENAPI_SPEC)
+		})
+		this.app.use('/docs', (req, res) => {
+			serveSwaggerUI(req, res)
+		})
+
+		// Feature Routers
+		this.app.use('/api/v1/config', createConfigurationRouter(configController))
+		this.app.use('/api/v1/customers', createCustomerRouter(customerController))
+		this.app.use('/api/v1/sync', createImportRouter(importController))
+		this.app.use('/api/v1/sync', createPaymentRouter(paymentController))
+		this.app.use('/api/v1/sync', createRunsRouter(runsController))
+
+		// RFC 9457 Global Error Handler
+		this.app.use(rfc9457ErrorMiddleware)
 	}
 
 	handle(req: IncomingMessage, res: ServerResponse): boolean {
 		const url = new URL(req.url ?? '/', `http://${req.headers.host || '127.0.0.1'}`)
 		const pathname = url.pathname
 
-		// OpenAPI Spec & Swagger UI
-		if (req.method === 'GET' && pathname === '/api/v1/openapi.json') {
-			res.setHeader('Content-Type', 'application/json; charset=utf-8')
-			res.writeHead(200)
-			res.end(JSON.stringify(OPENAPI_SPEC, null, 2))
+		if (pathname.startsWith('/api/v1') || pathname === '/docs' || pathname.startsWith('/docs/')) {
+			this.app(req, res)
 			return true
 		}
-
-		if (req.method === 'GET' && (pathname === '/docs' || pathname === '/docs/')) {
-			serveSwaggerUI(req, res)
-			return true
-		}
-
-		// Feature Routes
-		if (dispatchConfigurationRoutes(req, res, pathname, this.configController)) return true
-		if (dispatchCustomerRoutes(req, res, pathname, url, this.customerController)) return true
-		if (dispatchImportRoutes(req, res, pathname, url, this.importController)) return true
-		if (dispatchPaymentRoutes(req, res, pathname, url, this.paymentController)) return true
-		if (dispatchRunsRoutes(req, res, pathname, url, this.runsController)) return true
 
 		return false
 	}

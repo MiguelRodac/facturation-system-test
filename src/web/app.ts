@@ -153,7 +153,40 @@ export function createApp(deps: AppDeps): Server {
 		const instance = createCobrixDatabase(deps.cobrixDbPath)
 		dbClient = new SqliteDatabaseClient(instance.db)
 		apiRouter = new CobrixApiRouter({ db: dbClient, billingApiUrl: deps.simulatorUrl })
-		scheduler = new BackgroundScheduler(dbClient)
+		scheduler = new BackgroundScheduler(dbClient, {
+			onTrigger: async () => {
+				if (!dbClient) return
+			const configRepo = new SqliteConfigurationRepository(dbClient)
+			const importRepo = new SqliteImportRepository(dbClient)
+			const paymentRepo = new SqlitePaymentRepository(dbClient)
+
+			const getBillingClient = () => {
+				const configRow = dbClient?.queryOne<{ api_url: string; api_user: string; api_password: string }>(
+					'SELECT api_url, api_user, api_password FROM company_config WHERE id = 1'
+				)
+				const baseUrl = (configRow && configRow.api_url !== 'http://127.0.0.1:4310')
+					? configRow.api_url
+					: (deps.simulatorUrl || configRow?.api_url || 'http://127.0.0.1:4310')
+
+				return new BillingApiClient({
+					baseUrl,
+					username: configRow?.api_user || 'cobrix',
+					password: configRow?.api_password || 'cobrix-sandbox',
+				})
+			}
+
+			const importBilling = new IspBillingApiAdapter(getBillingClient)
+			const paymentBilling = new IspPaymentBillingApiAdapter(getBillingClient)
+
+			const importUseCase = new ImportInstallmentsUseCase(importBilling, importRepo, configRepo)
+			const reconcileUseCase = new ReconcilePaymentsUseCase(paymentBilling, paymentRepo)
+
+			const importRes = await importUseCase.execute({ isSimulation: false })
+			console.log(`[SYNC ENGINE] 📥 Importación automática completada: ${importRes.importedInvoicesCount} facturas importadas`)
+
+			const paymentRes = await reconcileUseCase.execute({ isSimulation: false })
+			console.log(`[SYNC ENGINE] 💳 Conciliación automática completada: ${paymentRes.paidInvoicesCount} facturas marcadas pagadas`)
+		}})
 		scheduler.start()
 	}
 
@@ -223,7 +256,7 @@ export function createApp(deps: AppDeps): Server {
 		}
 
 		// Serve compiled React SPA under /app/
-		const frontendDist = join(process.cwd(), 'frontend', 'dist')
+		const frontendDist = join(process.cwd(), 'dist', 'web')
 		if (existsSync(frontendDist) && (url.pathname === '/app' || url.pathname.startsWith('/app/'))) {
 			if (req.method !== 'GET') {
 				return send(res, 405, 'Method Not Allowed', 'text/plain')

@@ -12,11 +12,21 @@
 		"seed": "node --disable-warning=ExperimentalWarning src/billing-api/seed.ts",
 		"test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"test/**/*.test.ts\"",
 		"typecheck": "tsc --noEmit",
-		"frontend:build": "pnpm -C frontend build",
-		"frontend:dev": "pnpm -C frontend dev"
+		"frontend:build": "vite build",
+		"frontend:dev": "vite"
 	},
 	"devDependencies": {
+		"@types/express": "^5.0.6",
 		"@types/node": "24.3.0",
-		"typescript": "5.9.2"
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"@vitejs/plugin-react": "^6.1.2",
+		"typescript": "5.9.2",
+		"vite": "^8.3.4"
+	},
+	"dependencies": {
+		"express": "^5.3.0",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1"
 	}
 }

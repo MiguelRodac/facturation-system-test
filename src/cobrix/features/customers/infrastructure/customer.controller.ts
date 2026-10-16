@@ -3,11 +3,10 @@
  * Handles HTTP requests and delegates to application use cases
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { NextFunction, Request, Response } from 'express'
 import { NotFoundError } from '../../../shared/domain/errors/app.errors.ts'
-import { handleRFC9457Error } from '../../../shared/infrastructure/middleware/rfc9457-error-handler.ts'
 import { CustomerResponseMapper } from '../application/customer.response.mapper.ts'
-import type { GetCustomerDossierUseCase, ListCustomersUseCase } from '../application/customer.use-cases.ts'
+import type { GetCustomerDossierUseCase, ListCustomersUseCase } from '../application/index.ts'
 
 export class CustomerController {
 	private readonly listCustomersUseCase: ListCustomersUseCase
@@ -21,30 +20,28 @@ export class CustomerController {
 		this.getCustomerDossierUseCase = getCustomerDossierUseCase
 	}
 
-	async list(req: IncomingMessage, res: ServerResponse, query?: string): Promise<void> {
+	async list(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const customers = await this.listCustomersUseCase.execute(query)
+			const q = typeof req.query.q === 'string' ? req.query.q : undefined
+			const customers = await this.listCustomersUseCase.execute(q)
 			const dtos = customers.map(CustomerResponseMapper.toSummaryDto)
-			res.setHeader('Content-Type', 'application/json; charset=utf-8')
-			res.writeHead(200)
-			res.end(JSON.stringify({ data: dtos }))
+			res.status(200).json({ data: dtos })
 		} catch (err) {
-			handleRFC9457Error(err, req, res)
+			next(err)
 		}
 	}
 
-	async getById(req: IncomingMessage, res: ServerResponse, customerId: string): Promise<void> {
+	async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
+			const customerId = req.params.id as string
 			const dossier = await this.getCustomerDossierUseCase.execute(customerId)
 			if (!dossier) {
 				throw new NotFoundError(`Customer with ID '${customerId}' not found`)
 			}
 			const dto = CustomerResponseMapper.toDossierDto(dossier)
-			res.setHeader('Content-Type', 'application/json; charset=utf-8')
-			res.writeHead(200)
-			res.end(JSON.stringify({ data: dto }))
+			res.status(200).json({ data: dto })
 		} catch (err) {
-			handleRFC9457Error(err, req, res)
+			next(err)
 		}
 	}
 }

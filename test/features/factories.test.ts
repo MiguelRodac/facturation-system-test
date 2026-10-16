@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import {
-	ContractFactory,
-	CustomerFactory,
-	InvoiceFactory,
-} from '../../src/cobrix/features/import/application/import.factories.ts'
+import { ContractFactory } from '../../src/cobrix/features/contracts/domain/contract.factory.ts'
+import { CustomerFactory } from '../../src/cobrix/features/customers/domain/customer.factory.ts'
+import { InvoiceFactory } from '../../src/cobrix/features/invoices/domain/invoice.factory.ts'
 import type { ImportableContract } from '../../src/cobrix/features/import/domain/billing-api.port.ts'
 import type { CandidateInstallment } from '../../src/cobrix/features/import/domain/import.types.ts'
 import { Money } from '../../src/cobrix/shared/domain/money.vo.ts'

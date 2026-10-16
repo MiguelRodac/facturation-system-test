@@ -1,6 +1,6 @@
 /**
- * Consolidated Payment Use Cases (docs/ENUNCIADO.md §3.3, §4, §5)
- * Matching pattern from myintelli-global-api (entity.use-cases.ts)
+ * Reconcile Payments Use Case (docs/ENUNCIADO.md §3.3, §4, §5)
+ * Single Responsibility: Query payment book from ISP API and reconcile open invoices
  */
 
 import type { PaymentBillingApiPort } from '../domain/payment-billing-api.port.ts'
@@ -119,20 +119,5 @@ export class ReconcilePaymentsUseCase {
 
 			throw error
 		}
-	}
-}
-
-export class SimulatePaymentsUseCase {
-	private readonly reconcileUseCase: ReconcilePaymentsUseCase
-
-	constructor(reconcileUseCase: ReconcilePaymentsUseCase) {
-		this.reconcileUseCase = reconcileUseCase
-	}
-
-	async execute(options: Omit<ReconcileOptions, 'isSimulation'> = {}): Promise<PaymentSummary> {
-		return this.reconcileUseCase.execute({
-			...options,
-			isSimulation: true,
-		})
 	}
 }

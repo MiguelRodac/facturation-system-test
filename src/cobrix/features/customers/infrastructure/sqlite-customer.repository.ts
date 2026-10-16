@@ -5,17 +5,7 @@
 
 import type { DatabaseClient } from '../../../shared/infrastructure/database/database.client.ts'
 import type { CustomerEntity, CustomerRepositoryPort } from '../domain/index.ts'
-
-interface CustomerRow {
-	id: string
-	name: string
-	person_type: 'NATURAL' | 'LEGAL'
-	email: string | null
-	phone: string | null
-	address: string | null
-	origin: string
-	created_at: string
-}
+import { CustomerMapper, type CustomerRow } from './customer.mapper.ts'
 
 export class SqliteCustomerRepository implements CustomerRepositoryPort {
 	private readonly db: DatabaseClient
@@ -33,16 +23,7 @@ export class SqliteCustomerRepository implements CustomerRepositoryPort {
 		`
 		const params = query ? [`%${query}%`, `%${query}%`] : []
 		const rows = this.db.query<CustomerRow>(sql, params)
-		return rows.map(r => ({
-			id: r.id,
-			name: r.name,
-			personType: r.person_type,
-			email: r.email,
-			phone: r.phone,
-			address: r.address,
-			origin: r.origin,
-			createdAt: r.created_at,
-		}))
+		return rows.map(CustomerMapper.toDomain)
 	}
 
 	async findById(id: string): Promise<CustomerEntity | null> {
@@ -51,17 +32,8 @@ export class SqliteCustomerRepository implements CustomerRepositoryPort {
 			FROM customer
 			WHERE id = ?
 		`
-		const r = this.db.queryOne<CustomerRow>(sql, [id])
-		if (!r) return null
-		return {
-			id: r.id,
-			name: r.name,
-			personType: r.person_type,
-			email: r.email,
-			phone: r.phone,
-			address: r.address,
-			origin: r.origin,
-			createdAt: r.created_at,
-		}
+		const row = this.db.queryOne<CustomerRow>(sql, [id])
+		if (!row) return null
+		return CustomerMapper.toDomain(row)
 	}
 }

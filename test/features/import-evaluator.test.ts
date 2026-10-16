@@ -1,16 +1,34 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import {
-	DEFAULT_CONFIGURATION,
-	type ConfigurationEntity,
-} from '../../src/cobrix/features/configuration/index.ts'
+import type { ConfigurationEntity } from '../../src/cobrix/features/configuration/index.ts'
 import {
 	ImportEvaluatorService,
 	type ImportableContract,
 } from '../../src/cobrix/features/import/index.ts'
 
 describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ยง3.1 & ยง4)', () => {
+	const testConfig: ConfigurationEntity = {
+		id: 1,
+		companyName: 'Test Company',
+		companyTaxId: 'J-12345678-0',
+		billingEmail: 'billing@test.com',
+		apiUrl: 'http://127.0.0.1:4310',
+		apiUser: 'cobrix',
+		apiPassword: 'password',
+		importableStatuses: ['ACTIVO', 'CORTADO'],
+		graceDays: 0,
+		importWindowMonths: null,
+		maxRecentInstallments: null,
+		maxNewInvoices: null,
+		maxNewAmount: null,
+		excludedDocTypes: [],
+		currencyMinRatio: 0.01,
+		residualThresholdCents: 1,
+		autoRunEnabled: false,
+		autoRunHour: null,
+	}
+
 	const baseContract: ImportableContract = {
 		contractId: 900101,
 		code: 'CON-001',
@@ -30,7 +48,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 	}
 
 	it('qualifies valid contract and installments producing candidate invoices', () => {
-		const result = ImportEvaluatorService.evaluate(baseContract, DEFAULT_CONFIGURATION, '2026-10')
+		const result = ImportEvaluatorService.evaluate(baseContract, testConfig, '2026-10')
 		assert.equal(result.isEligible, true)
 		assert.equal(result.candidates.length, 2)
 	})
@@ -40,7 +58,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 			...baseContract,
 			installments: [],
 		}
-		const result = ImportEvaluatorService.evaluate(emptyContract, DEFAULT_CONFIGURATION, '2026-10')
+		const result = ImportEvaluatorService.evaluate(emptyContract, testConfig, '2026-10')
 		assert.equal(result.isEligible, false)
 		assert.equal(result.items[0]?.result, 'NO_DEBT')
 	})
@@ -50,7 +68,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 			...baseContract,
 			status: 'CORTESIA',
 		}
-		const result = ImportEvaluatorService.evaluate(corteContract, DEFAULT_CONFIGURATION, '2026-10')
+		const result = ImportEvaluatorService.evaluate(corteContract, testConfig, '2026-10')
 		assert.equal(result.isEligible, false)
 		assert.ok(result.items.every(i => i.result === 'EXCLUDED_STATUS'))
 	})
@@ -62,7 +80,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 			holderName: 'EMPRESA DEMO, C.A.',
 		}
 		const configWithExclusion: ConfigurationEntity = {
-			...DEFAULT_CONFIGURATION,
+			...testConfig,
 			excludedDocTypes: ['J'],
 		}
 		const result = ImportEvaluatorService.evaluate(legalContract, configWithExclusion, '2026-10')
@@ -78,7 +96,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 				{ deudaId: '7000010', amount: 0.05, status: 'EMI', debtDetail: ['PLAN3MB20 - 2026 Agosto'] },
 			],
 		}
-		const result = ImportEvaluatorService.evaluate(incoherentContract, DEFAULT_CONFIGURATION, '2026-10')
+		const result = ImportEvaluatorService.evaluate(incoherentContract, testConfig, '2026-10')
 		assert.equal(result.isEligible, false)
 		assert.equal(result.items[0]?.result, 'INCOHERENT_CURRENCY')
 	})
@@ -91,7 +109,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 				{ deudaId: '7000012', amount: 25, status: 'EMI', debtDetail: ['PLAN15MB25 - 2026 Septiembre'] },
 			],
 		}
-		const result = ImportEvaluatorService.evaluate(residualContract, DEFAULT_CONFIGURATION, '2026-10')
+		const result = ImportEvaluatorService.evaluate(residualContract, testConfig, '2026-10')
 		assert.equal(result.isEligible, true)
 		assert.equal(result.candidates.length, 1)
 		assert.equal(result.candidates[0]?.installmentId, '7000012')
@@ -108,7 +126,7 @@ describe('Domain Service: ImportEvaluatorService (Pure Business Rules Pipeline ย
 			],
 		}
 		const configWithLimit: ConfigurationEntity = {
-			...DEFAULT_CONFIGURATION,
+			...testConfig,
 			maxRecentInstallments: 1,
 		}
 		const result = ImportEvaluatorService.evaluate(multiInstallmentContract, configWithLimit, '2026-10')

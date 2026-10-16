@@ -9,8 +9,8 @@ export interface CustomerEntity {
 	readonly email?: string | null
 	readonly phone?: string | null
 	readonly address?: string | null
-	readonly origin: string
-	readonly createdAt: string
+	readonly origin?: string
+	readonly createdAt?: string
 }
 
 export type CustomerProfileEntity = CustomerEntity

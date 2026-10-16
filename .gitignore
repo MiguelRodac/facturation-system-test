@@ -17,4 +17,4 @@ data/cobrix.sqlite
 .env
 *.env
 dist
-!frontend/dist/
+!dist/web/

@@ -88,8 +88,8 @@ export class CustomerResponseMapper {
 				email: entity.profile.email ?? null,
 				phone: entity.profile.phone ?? null,
 				address: entity.profile.address ?? null,
-				origin: entity.profile.origin,
-				created_at: entity.profile.createdAt,
+				origin: entity.profile.origin ?? 'ISP',
+				created_at: entity.profile.createdAt ?? '',
 			},
 			contracts: entity.contracts.map(c => ({
 				id: c.id,
