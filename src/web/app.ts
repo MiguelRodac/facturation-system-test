@@ -13,10 +13,9 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { SqliteConfigurationRepository } from '../cobrix/features/configuration/index.ts'
 import { SqliteDatabaseClient } from '../cobrix/shared/infrastructure/database/database.client.ts'
 import { createCobrixDatabase } from '../cobrix/shared/infrastructure/database/database.ts'
-import { BackgroundScheduler, CobrixApiRouter } from '../cobrix/shared/index.ts'
+import { CobrixApiRouter } from '../cobrix/shared/index.ts'
 
 export interface AppDeps {
 	/** The local invoice manager API. */
@@ -41,7 +40,6 @@ const MIME_TYPES: Record<string, string> = {
 export function createApp(deps: AppDeps): Server {
 	let dbClient: SqliteDatabaseClient | null = null
 	let apiRouter: CobrixApiRouter | null = null
-	let scheduler: BackgroundScheduler | null = null
 
 	if (deps.cobrixDbPath) {
 		const dbInstance = createCobrixDatabase(deps.cobrixDbPath)
@@ -50,32 +48,6 @@ export function createApp(deps: AppDeps): Server {
 			db: dbClient,
 			billingApiUrl: deps.simulatorUrl,
 		})
-
-		const configRepo = new SqliteConfigurationRepository(dbClient)
-
-		scheduler = new BackgroundScheduler({
-			intervalMs: 60_000,
-			getConfig: async () => {
-				const cfg = await configRepo.get()
-				return {
-					autoRunEnabled: cfg.autoRunEnabled,
-					autoRunHour: cfg.autoRunHour ?? null,
-				}
-			},
-			onTrigger: async () => {
-				console.log('[SYNC ENGINE] 🚀 Iniciando corrida automática diaria...')
-				try {
-					const importRes = await apiRouter!.importUseCase.execute({ isSimulation: false })
-					console.log(`[SYNC ENGINE] 📥 Importación completada: ${importRes.importedInvoicesCount} facturas nuevas de ${importRes.totalContractsChecked} contratos evaluados.`)
-
-					const reconcileRes = await apiRouter!.reconcileUseCase.execute({ isSimulation: false })
-					console.log(`[SYNC ENGINE] 💳 Conciliación completada: ${reconcileRes.paidInvoicesCount} facturas pagadas, ${reconcileRes.partialPaymentsCount} pagos parciales.`)
-				} catch (err) {
-					console.error('[SYNC ENGINE] ❌ Error en ejecución de corrida programada:', err)
-				}
-			},
-		})
-		scheduler.start()
 	}
 
 	const distWebDir = join(fileURLToPath(new URL('.', import.meta.url)), '../../dist/web')
@@ -158,8 +130,8 @@ export function createApp(deps: AppDeps): Server {
 
 	const originalClose = server.close.bind(server)
 	server.close = ((callback?: (err?: Error) => void) => {
-		if (scheduler) {
-			scheduler.stop()
+		if (apiRouter) {
+			apiRouter.close()
 		}
 		if (dbClient) {
 			dbClient.close()

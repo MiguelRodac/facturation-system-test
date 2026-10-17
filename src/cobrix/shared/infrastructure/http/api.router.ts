@@ -49,16 +49,19 @@ import type { DatabaseClient } from '../database/database.client.ts'
 import { NotFoundError } from '../../domain/errors/app.errors.ts'
 import { rfc9457ErrorMiddleware } from '../middleware/rfc9457-error-handler.ts'
 import { OPENAPI_SPEC, serveSwaggerUI } from '../openapi/openapi.ts'
+import { BackgroundScheduler } from '../scheduler/scheduler.ts'
 
 export interface CobrixApiRouterOptions {
 	db: DatabaseClient
 	billingApiUrl?: string
+	schedulerIntervalMs?: number
 }
 
 export class CobrixApiRouter {
 	readonly app: Express
 	readonly importUseCase: ImportInstallmentsUseCase
 	readonly reconcileUseCase: ReconcilePaymentsUseCase
+	readonly scheduler: BackgroundScheduler
 
 	constructor(options: CobrixApiRouterOptions) {
 		const { db } = options
@@ -143,6 +146,31 @@ export class CobrixApiRouter {
 
 		// RFC 9457 Global Error Handler
 		this.app.use(rfc9457ErrorMiddleware)
+
+		// Backend Auto-Run Sync Engine
+		this.scheduler = new BackgroundScheduler({
+			intervalMs: options.schedulerIntervalMs ?? 60_000,
+			getConfig: async () => {
+				const cfg = await configRepo.get()
+				return {
+					autoRunEnabled: cfg.autoRunEnabled,
+					autoRunHour: cfg.autoRunHour ?? null,
+				}
+			},
+			onTrigger: async () => {
+				console.log('[SYNC ENGINE] 🚀 Iniciando corrida automática programada...')
+				try {
+					const importRes = await importUseCase.execute({ isSimulation: false })
+					console.log(`[SYNC ENGINE] 📥 Importación: ${importRes.importedInvoicesCount} facturas nuevas de ${importRes.totalContractsChecked} contratos.`)
+
+					const reconcileRes = await reconcileUseCase.execute({ isSimulation: false })
+					console.log(`[SYNC ENGINE] 💳 Conciliación: ${reconcileRes.paidInvoicesCount} facturas pagadas, ${reconcileRes.partialPaymentsCount} pagos parciales.`)
+				} catch (err) {
+					console.error('[SYNC ENGINE] ❌ Error en ejecución de corrida programada:', err)
+				}
+			},
+		})
+		this.scheduler.start()
 	}
 
 	handle(req: IncomingMessage, res: ServerResponse): boolean {
@@ -155,5 +183,9 @@ export class CobrixApiRouter {
 		}
 
 		return false
+	}
+
+	close(): void {
+		this.scheduler.stop()
 	}
 }

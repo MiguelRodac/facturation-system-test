@@ -3,6 +3,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express'
+import { PaymentRequestMapper } from '../application/payment.request.mapper.ts'
 import { PaymentResponseMapper } from '../application/payment.response.mapper.ts'
 import type { ReconcilePaymentsUseCase } from '../application/reconcile-payments.use-case.ts'
 
@@ -15,8 +16,8 @@ export class PaymentController {
 
 	async reconcile(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const isSimulation = req.query.simulate === 'true'
-			const result = await this.reconcileUseCase.execute({ isSimulation })
+			const query = PaymentRequestMapper.toQuery(req.query)
+			const result = await this.reconcileUseCase.execute({ isSimulation: query.isSimulation })
 			const dto = PaymentResponseMapper.toDto(result)
 			res.status(200).json({ data: dto })
 		} catch (err) {

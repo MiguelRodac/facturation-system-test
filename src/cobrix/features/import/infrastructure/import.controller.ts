@@ -3,6 +3,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express'
+import { ImportRequestMapper } from '../application/import.request.mapper.ts'
 import { ImportResponseMapper } from '../application/import.response.mapper.ts'
 import type { ImportInstallmentsUseCase } from '../application/import-installments.use-case.ts'
 
@@ -15,8 +16,8 @@ export class ImportController {
 
 	async import(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const isSimulation = req.query.simulate === 'true'
-			const result = await this.importUseCase.execute({ isSimulation })
+			const query = ImportRequestMapper.toQuery(req.query)
+			const result = await this.importUseCase.execute({ isSimulation: query.isSimulation })
 			const dto = ImportResponseMapper.toDto(result)
 			res.status(200).json({ data: dto })
 		} catch (err) {
