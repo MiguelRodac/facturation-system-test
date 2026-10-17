@@ -338,7 +338,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                   {filteredInvoices.map((inv) => (
                     <tr
                       key={inv.id || inv.external_installment_id}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                      className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors"
                     >
                       <td className="py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">
                         {inv.external_installment_id}
@@ -425,7 +425,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                   return (
                     <tr
                       key={c.id}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${indicatorClass}`}
+                      className={`hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors ${indicatorClass}`}
                     >
                       <td className={`py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200 ${indicatorClass}`}>
                         {c.id}

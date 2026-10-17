@@ -142,7 +142,7 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({
                     <tr
                       key={c.id}
                       onClick={() => onSelectCustomer(c.id)}
-                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
+                      className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors cursor-pointer group"
                     >
                       {/* Cliente con Iniciales */}
                       <td className="py-3 px-4 whitespace-nowrap">

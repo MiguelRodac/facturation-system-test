@@ -89,4 +89,27 @@
   .dark textarea::placeholder {
     color: #64748b;
   }
+
+  /* Table rules for dark mode across all pages */
+  .dark table {
+    color: #cbd5e1;
+  }
+
+  .dark thead {
+    background-color: #131b2e !important;
+  }
+
+  .dark tbody {
+    background-color: #0f172a !important;
+  }
+
+  .dark tbody tr {
+    background-color: #0f172a !important;
+  }
+
+  .dark tbody tr:hover,
+  .dark tbody tr:hover td,
+  .dark tr:hover {
+    background-color: #1e293b !important;
+  }
 }

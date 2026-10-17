@@ -341,7 +341,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                   {topDebtors.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
+                    <tr key={c.id} className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors group">
                       <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">{c.name}</td>
                       <td className="py-3 px-4 font-mono tabular-nums text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">{c.id}</td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
@@ -400,7 +400,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 {recentRuns.map((r) => {
                   const parts = parseSummaryBadges(r.summary)
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={r.id} className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors">
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700 shadow-2xs">
                           #{r.id}

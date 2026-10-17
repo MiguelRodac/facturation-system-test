@@ -449,7 +449,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                   const parts = parseSummaryBadges(r.summary)
 
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={r.id} className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors">
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200/70 dark:border-slate-700 shadow-2xs">
                           #{r.id}
@@ -685,7 +685,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                       {filteredItems.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors">
                           <td className="py-2.5 px-4 font-mono tabular-nums text-slate-700 dark:text-slate-300 whitespace-nowrap font-medium">
                             {item.contract_id ?? '—'}
                           </td>
