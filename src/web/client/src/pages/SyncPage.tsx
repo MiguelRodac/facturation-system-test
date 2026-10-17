@@ -145,7 +145,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
         <Card
           title={
             <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 text-indigo-600" />
+              <Download className="w-4 h-4 text-emerald-600" />
               <span className="font-semibold text-slate-900 text-sm">Importar Cuotas</span>
             </div>
           }
@@ -166,7 +166,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
               <button
                 disabled={syncing !== null}
                 onClick={() => handleImport(false)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold transition-all shadow-xs shadow-indigo-200 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 cursor-pointer disabled:opacity-50"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Importar cuotas</span>
@@ -221,7 +221,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       >
         {loading ? (
           <div className="flex items-center justify-center py-12 text-slate-400">
-            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-indigo-600" />
+            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-emerald-600" />
             <span className="text-sm">Cargando historial de corridas...</span>
           </div>
         ) : runs.length === 0 ? (
@@ -302,7 +302,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                                 : isPaid
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isNew
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                ? 'bg-teal-50 text-teal-700 border-teal-200'
                                 : 'bg-slate-50 text-slate-700 border-slate-200'
 
                               return (
@@ -324,7 +324,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                       <td className="py-3 text-right">
                         <button
                           onClick={() => handleOpenAudit(r.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Auditoría</span>
@@ -355,7 +355,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       >
         {loadingDetail ? (
           <div className="flex items-center justify-center py-12 text-slate-400">
-            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-indigo-600" />
+            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-emerald-600" />
             <span className="text-xs font-medium">Cargando desglose de la corrida...</span>
           </div>
         ) : runDetail ? (
@@ -390,7 +390,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                   <button
                     type="button"
                     onClick={() => setHideZeros(!hideZeros)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
                   >
                     {hideZeros ? (
                       <>

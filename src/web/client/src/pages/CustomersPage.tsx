@@ -67,7 +67,7 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por nombre o identificación (ej. V10145063, Ana, J401234567)..."
-              className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono tabular-nums"
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono tabular-nums"
             />
             {query && (
               <button
@@ -83,7 +83,7 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, 
         {/* Content */}
         {loading ? (
           <div className="flex items-center justify-center py-16 text-slate-400">
-            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-indigo-600" />
+            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-emerald-600" />
             <span className="text-sm font-medium">Buscando clientes...</span>
           </div>
         ) : customers.length === 0 ? (
@@ -116,16 +116,16 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, 
                     <tr
                       key={c.id}
                       onClick={() => onSelectCustomer(c.id)}
-                      className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                      className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                     >
                       {/* Cliente con Iniciales */}
                       <td className="py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
                             {getInitials(c.name)}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors block">
+                            <span className="font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors block">
                               {c.name}
                             </span>
                           </div>
@@ -196,7 +196,7 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, 
 
                       {/* Acción */}
                       <td className="py-3 text-right">
-                        <span className="text-xs font-semibold text-slate-400 group-hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">
+                        <span className="text-xs font-semibold text-slate-400 group-hover:text-emerald-700 inline-flex items-center gap-1 transition-colors">
                           <span>Ver</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </span>

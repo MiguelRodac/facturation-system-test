@@ -139,7 +139,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     return (
       <div className="flex items-center justify-center py-24 text-slate-400">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
           <span className="text-sm font-medium">Cargando parámetros...</span>
         </div>
       </div>
@@ -179,7 +179,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     type="text"
                     value={config.company_name}
                     onChange={(e) => setConfig({ ...config, company_name: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     required
                   />
                 </div>
@@ -193,7 +193,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                       type="text"
                       value={config.company_tax_id}
                       onChange={(e) => setConfig({ ...config, company_tax_id: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                       required
                     />
                   </div>
@@ -205,7 +205,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                       type="email"
                       value={config.billing_email}
                       onChange={(e) => setConfig({ ...config, billing_email: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                       required
                     />
                   </div>
@@ -238,7 +238,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                           onClick={() => toggleStatus(status)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer font-mono tabular-nums border ${
                             isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs shadow-emerald-200'
                               : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                           }`}
                         >
@@ -267,7 +267,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                           onClick={() => toggleDocType(doc)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer font-mono tabular-nums border ${
                             isExcluded
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs shadow-emerald-200'
                               : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                           }`}
                         >
@@ -293,7 +293,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                       max="60"
                       value={config.grace_days}
                       onChange={(e) => setConfig({ ...config, grace_days: Number(e.target.value) })}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                       required
                     />
                     <span className="block text-[11px] text-slate-400 mt-1">
@@ -316,7 +316,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                         })
                       }
                       placeholder="Sin límite"
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     />
                     <span className="block text-[11px] text-slate-400 mt-1">
                       Meses hacia atrás a importar (3, 6, 9 o 12).
@@ -341,7 +341,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                         })
                       }
                       placeholder="Sin límite"
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     />
                   </div>
 
@@ -361,7 +361,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                         })
                       }
                       placeholder="Sin límite"
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -393,8 +393,8 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     role="switch"
                     aria-checked={config.auto_run_enabled}
                     onClick={() => setConfig({ ...config, auto_run_enabled: !config.auto_run_enabled })}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${
-                      config.auto_run_enabled ? 'bg-indigo-600' : 'bg-slate-200'
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 ${
+                      config.auto_run_enabled ? 'bg-emerald-600' : 'bg-slate-200'
                     }`}
                   >
                     <span
@@ -415,7 +415,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     onChange={(e) => setConfig({ ...config, auto_run_hour: e.target.value })}
                     placeholder="03:00"
                     pattern="^([01]\d|2[0-3]):([0-5]\d)$"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                   />
                   <span className="block text-[11px] text-slate-400 mt-1">
                     Zona horaria America/Caracas.
@@ -445,7 +445,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     value={config.api_url}
                     onChange={(e) => setConfig({ ...config, api_url: e.target.value })}
                     placeholder="http://127.0.0.1:4310"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono tabular-nums text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     required
                   />
                 </div>
@@ -458,7 +458,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     type="text"
                     value={config.api_user}
                     onChange={(e) => setConfig({ ...config, api_user: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                     required
                   />
                 </div>
@@ -472,7 +472,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                     value={config.api_password || ''}
                     onChange={(e) => setConfig({ ...config, api_password: e.target.value })}
                     placeholder="•••••••••••• (dejar vacío para mantener)"
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
                   />
                 </div>
 
@@ -534,7 +534,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
             <button
               type="submit"
               disabled={saving}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-md shadow-indigo-200 cursor-pointer disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-md shadow-emerald-200 cursor-pointer disabled:opacity-50"
             >
               {saving ? (
                 <>

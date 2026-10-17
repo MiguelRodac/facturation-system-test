@@ -25,7 +25,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
           : isWarn
           ? 'bg-amber-50 text-amber-600 border-amber-500'
           : isInfo
-          ? 'bg-indigo-50 text-indigo-600 border-indigo-500'
+          ? 'bg-teal-50 text-teal-600 border-teal-500'
           : 'bg-slate-50 text-slate-500 border-slate-400'
 
         return (

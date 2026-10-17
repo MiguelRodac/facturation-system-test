@@ -58,7 +58,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-        <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3" />
+        <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-sm font-medium">Cargando expediente del cliente...</p>
       </div>
     )
@@ -107,7 +107,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
       <div>
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a Clientes
@@ -118,7 +118,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
       <Card>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
               {initials}
             </div>
             <div className="space-y-1.5">
@@ -225,7 +225,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
         <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1">
             <span>Contratos Registrados</span>
-            <FileText className="w-4 h-4 text-indigo-500" />
+            <FileText className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tight">
             {totals.contracts_count}
@@ -242,7 +242,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
           onClick={() => setActiveTab('facturas')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'facturas'
-              ? 'bg-white text-indigo-600 shadow-xs'
+              ? 'bg-white text-emerald-800 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -253,7 +253,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
           onClick={() => setActiveTab('contratos')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'contratos'
-              ? 'bg-white text-indigo-600 shadow-xs'
+              ? 'bg-white text-emerald-800 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -264,7 +264,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
           onClick={() => setActiveTab('timeline')}
           className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'timeline'
-              ? 'bg-white text-indigo-600 shadow-xs'
+              ? 'bg-white text-emerald-800 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -282,7 +282,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 onClick={() => setInvoiceFilter('all')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
                   invoiceFilter === 'all'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -292,7 +292,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 onClick={() => setInvoiceFilter('open')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
                   invoiceFilter === 'open'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -302,7 +302,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 onClick={() => setInvoiceFilter('paid')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
                   invoiceFilter === 'paid'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -429,7 +429,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                       <td className={`py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 ${indicatorClass}`}>
                         {c.id}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-indigo-600">
+                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-emerald-700">
                         {c.code}
                       </td>
                       <td className="py-3 px-4 font-semibold text-slate-900">

@@ -61,6 +61,14 @@ export class Identification {
 		return Identification.create(raw)
 	}
 
+	static tryParse(raw: string): Identification | null {
+		try {
+			return Identification.create(raw)
+		} catch {
+			return null
+		}
+	}
+
 	get normalized(): string {
 		return this.value
 	}

@@ -54,7 +54,7 @@ export class ConfigurationMapper {
 		return {
 			id: row.id,
 			companyName: row.company_name,
-			companyTaxId: Identification.parse(row.company_tax_id)?.value ?? row.company_tax_id,
+			companyTaxId: Identification.tryParse(row.company_tax_id)?.value ?? row.company_tax_id,
 			billingEmail: row.billing_email,
 			apiUrl: row.api_url,
 			apiUser: row.api_user,

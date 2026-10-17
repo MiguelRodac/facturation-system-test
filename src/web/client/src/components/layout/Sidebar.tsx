@@ -39,19 +39,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="cursor-pointer group flex items-center justify-between"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-sm shadow-indigo-200 group-hover:bg-indigo-700 transition-colors">
-                <Zap className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center shadow-sm shadow-emerald-200 group-hover:from-emerald-500 group-hover:to-teal-300 transition-colors">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5v-3.5h-2v3.5l-4-4 1.41-1.41L11 13.67V7.5h2v6.17l2.59-2.58L17 12.5l-4 4z" opacity="0" />
+                  <path d="M21.71 8.29l-4-4a1 1 0 0 0-1.42 0l-11 11a1 1 0 0 0 0 1.42l4 4a1 1 0 0 0 1.42 0l11-11a1 1 0 0 0 0-1.42zM12 18.59l-2.59-2.59 7.3-7.29 2.58 2.58-7.29 7.3z" opacity="0"/>
+                  <path d="M21.5 5.5c-.8.8-2 .9-2.9.3L15 9.4c-.1.1-.3.2-.5.2-.4 0-.8-.3-.8-.8 0-.2.1-.4.2-.5l3.6-3.6c-.6-.9-.5-2.1.3-2.9 1-1 2.6-.9 3.6.1 1 1 1.1 2.6.1 3.6zm-8.8 6.2c.4-.4 1-.4 1.4 0l1.4 1.4c.4.4.4 1 0 1.4l-5 5c-.2.2-.4.3-.7.3H6c-.6 0-1-.4-1-1v-3.8c0-.3.1-.5.3-.7l7.4-7.4z" />
+                </svg>
               </div>
               <div>
-                <span className="font-bold text-slate-900 tracking-tight text-base block leading-none">
-                  COBRIX
+                <span className="font-extrabold text-slate-900 tracking-tight text-lg block leading-none">
+                  cobrix
                 </span>
                 <span className="text-[11px] text-slate-400 font-medium block truncate max-w-[130px] mt-1">
                   {companyName}
                 </span>
               </div>
             </div>
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide bg-indigo-50 text-indigo-700 rounded border border-indigo-200/60 uppercase">
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 rounded border border-emerald-200/80 uppercase">
               Sandbox
             </span>
           </div>
@@ -71,13 +75,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onNavigate(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
                   isActive
-                    ? 'bg-indigo-50/80 text-indigo-600 font-semibold border-r-2 border-indigo-600 shadow-xs'
+                    ? 'bg-emerald-50/80 text-emerald-800 font-semibold border-r-2 border-emerald-500 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium'
                 }`}
               >
                 <Icon
                   className={`w-4 h-4 shrink-0 ${
-                    isActive ? 'text-indigo-600' : 'text-slate-400'
+                    isActive ? 'text-emerald-600' : 'text-slate-400'
                   }`}
                 />
                 <span>{item.label}</span>
@@ -95,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             href="/docs"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/50 transition-colors"
           >
             <div className="flex items-center gap-2.5">
               <FileCode className="w-3.5 h-3.5 text-slate-400" />

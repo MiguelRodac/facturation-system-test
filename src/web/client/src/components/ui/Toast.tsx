@@ -31,7 +31,7 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
                 ? 'border-emerald-200 text-slate-800'
                 : isError
                 ? 'border-rose-200 text-slate-800'
-                : 'border-indigo-200 text-slate-800'
+                : 'border-teal-200 text-slate-800'
             }`}
           >
             <Icon
@@ -40,7 +40,7 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
                   ? 'text-emerald-500'
                   : isError
                   ? 'text-rose-500'
-                  : 'text-indigo-500'
+                  : 'text-teal-600'
               }`}
             />
             <div className="flex-1 text-xs font-medium leading-relaxed">{t.text}</div>

@@ -224,6 +224,35 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.ok(problem.errors.some(e => e.field.includes('auto_run_hour')))
 	})
 
+	it('PUT /api/v1/config updates configuration with arbitrary string tax ID without 500', async () => {
+		const payload = {
+			company_name: 'Cobrix Telecom Demo',
+			company_tax_id: 'string',
+			billing_email: 'cobranzas@cobrix.local',
+			api_url: billingApiUrl,
+			api_user: 'cobrix',
+			api_password: 'cobrix-sandbox',
+			importable_statuses: ['ACTIVO', 'CORTADO'],
+			import_window_months: 1156,
+			max_recent_installments: 7896,
+			grace_days: 7358,
+			max_new_invoices: 3995,
+			max_new_amount: 7183.089995745914,
+			excluded_doc_types: ['string'],
+			auto_run_hour: '03:00',
+			auto_run_enabled: false,
+		}
+		const res = await fetch(`${apiUrl}/api/v1/config`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(payload),
+		})
+		assert.equal(res.status, 200)
+		const body = await res.json() as { data: { company_tax_id: string; grace_days: number } }
+		assert.equal(body.data.company_tax_id, 'string')
+		assert.equal(body.data.grace_days, 7358)
+	})
+
 	it('GET /app/ serves compiled React SPA index.html', async () => {
 		const res = await fetch(`${apiUrl}/app/`)
 		assert.equal(res.status, 200)

@@ -56,4 +56,14 @@ describe('Feature: Configuration (docs/ENUNCIADO.md §3.1)', () => {
 		assert.equal(reloaded.maxNewInvoices, 10)
 		assert.deepEqual(reloaded.excludedDocTypes, ['J'])
 	})
+
+	it('handles companyTaxId with arbitrary string format without throwing 500', async () => {
+		const updated = await updateUseCase.execute({
+			companyTaxId: 'string',
+		})
+		assert.equal(updated.companyTaxId, 'string')
+
+		const reloaded = await getUseCase.execute()
+		assert.equal(reloaded.companyTaxId, 'string')
+	})
 })

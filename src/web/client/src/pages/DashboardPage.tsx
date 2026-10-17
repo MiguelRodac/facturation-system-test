@@ -87,7 +87,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNavigate('sincronizacion')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-xs shadow-indigo-200"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-xs shadow-emerald-200"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Sincronizar Cartera</span>
@@ -101,7 +101,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Clientes</span>
-            <Users className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+            <Users className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-slate-900 font-mono tabular-nums">
@@ -117,7 +117,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Contratos</span>
-            <FileText className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+            <FileText className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors" />
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-slate-900 font-mono tabular-nums">
@@ -130,16 +130,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* KPI 3: Por cobrar (Highlighted) */}
-        <div className="bg-indigo-50/40 p-5 rounded-xl border border-indigo-200 shadow-xs relative overflow-hidden group">
+        <div className="bg-emerald-50/50 p-5 rounded-xl border border-emerald-200 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-indigo-900">Por cobrar</span>
-            <DollarSign className="w-4 h-4 text-indigo-600" />
+            <span className="text-xs font-semibold text-emerald-900">Por cobrar</span>
+            <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-bold text-indigo-950 font-mono tabular-nums tracking-tight">
+            <span className="text-2xl font-bold text-emerald-950 font-mono tabular-nums tracking-tight">
               USD {totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span className="block text-[11px] text-indigo-600 font-medium mt-1 font-mono tabular-nums">
+            <span className="block text-[11px] text-emerald-700 font-medium mt-1 font-mono tabular-nums">
               {totalOpenInvoices} facturas abiertas
             </span>
           </div>
@@ -276,7 +276,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           action={
             <button
               onClick={() => onNavigate('clientes')}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
             >
               <span>Ver todos</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -313,7 +313,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       <td className="py-3 text-right">
                         <button
                           onClick={() => onSelectCustomer(c.id)}
-                          className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                          className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
                         >
                           Expediente &rarr;
                         </button>
@@ -333,7 +333,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         action={
           <button
             onClick={() => onNavigate('sincronizacion')}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
           >
             <span>Ver historial completo</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -389,7 +389,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                                 : isPaid
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isNew
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                ? 'bg-teal-50 text-teal-700 border-teal-200'
                                 : 'bg-slate-50 text-slate-700 border-slate-200'
 
                               return (
