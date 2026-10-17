@@ -3,7 +3,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express'
-import { ImportRequestMapper } from '../application/import.request.mapper.ts'
+import { ImportRequestMapper } from './import.request.mapper.ts'
 import { ImportResponseMapper } from '../application/import.response.mapper.ts'
 import type { ImportInstallmentsUseCase } from '../application/import-installments.use-case.ts'
 

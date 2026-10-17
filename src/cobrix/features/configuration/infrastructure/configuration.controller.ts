@@ -5,7 +5,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express'
-import { ConfigurationRequestMapper } from '../application/configuration.request.mapper.ts'
+import { ConfigurationRequestMapper } from './configuration.request.mapper.ts'
 import { ConfigurationResponseMapper } from '../application/configuration.response.mapper.ts'
 import type { GetConfigurationUseCase } from '../application/get-configuration.use-case.ts'
 import type { TestConnectionUseCase } from '../application/test-connection.use-case.ts'

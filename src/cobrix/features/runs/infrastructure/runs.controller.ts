@@ -4,7 +4,7 @@
 
 import type { NextFunction, Request, Response } from 'express'
 import { NotFoundError } from '../../../shared/domain/errors/app.errors.ts'
-import { RunsRequestMapper } from '../application/runs.request.mapper.ts'
+import { RunsRequestMapper } from './runs.request.mapper.ts'
 import { RunsResponseMapper } from '../application/runs.response.mapper.ts'
 import type { GetRecentRunsUseCase, GetRunDetailUseCase } from '../application/index.ts'
 

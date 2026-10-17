@@ -3,7 +3,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express'
-import { PaymentRequestMapper } from '../application/payment.request.mapper.ts'
+import { PaymentRequestMapper } from './payment.request.mapper.ts'
 import { PaymentResponseMapper } from '../application/payment.response.mapper.ts'
 import type { ReconcilePaymentsUseCase } from '../application/reconcile-payments.use-case.ts'
 

@@ -1,4 +1,5 @@
 export * from './customer.repository.ts'
 export * from './customer.mapper.ts'
 export * from './customer.controller.ts'
+export * from './customer.request.mapper.ts'
 export * from './customer.routes.ts'

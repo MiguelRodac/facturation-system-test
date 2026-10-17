@@ -1,5 +1,6 @@
 export * from './payment.repository.ts'
 export * from './payment.mapper.ts'
+export * from './payment.request.mapper.ts'
 export * from './isp-payment-billing-api.adapter.ts'
 export * from './payment.controller.ts'
 export * from './payment.routes.ts'

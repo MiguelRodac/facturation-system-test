@@ -5,7 +5,7 @@
 
 import type { NextFunction, Request, Response } from 'express'
 import { NotFoundError } from '../../../shared/domain/errors/app.errors.ts'
-import { CustomerRequestMapper } from '../application/customer.request.mapper.ts'
+import { CustomerRequestMapper } from './customer.request.mapper.ts'
 import { CustomerResponseMapper } from '../application/customer.response.mapper.ts'
 import type { GetCustomerDossierUseCase, ListCustomersUseCase } from '../application/index.ts'
 
