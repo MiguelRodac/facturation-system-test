@@ -103,6 +103,32 @@ export class PaymentEvaluatorService {
 		// Find latest valid receipt with num_factura
 		const validReceipt = [...matchingRows].reverse().find(r => r.receiptNumber && r.receiptNumber.trim() !== '')
 
+		// 3.5 Reopening check: If invoice was already PAID in Cobrix, verify if debt was restored via annulment
+		if (invoice.status === 'PAID') {
+			if (remainingBalance > 0) {
+				return {
+					contractId: invoice.contractId,
+					invoiceId: invoice.id,
+					installmentId: invoice.externalInstallmentId,
+					period: invoice.period,
+					previousBalance: 0,
+					newBalance: remainingBalance,
+					result: 'REOPENED',
+					reason: 'Payment was annulled in ISP cashier; invoice reopened with restored balance',
+				}
+			}
+			return {
+				contractId: invoice.contractId,
+				invoiceId: invoice.id,
+				installmentId: invoice.externalInstallmentId,
+				period: invoice.period,
+				previousBalance: 0,
+				newBalance: 0,
+				result: 'PAID',
+				reason: 'Invoice remains fully paid in ISP',
+			}
+		}
+
 		// 4. Paid check: balance <= 0 and something was paid
 		if (remainingBalance <= 0 && amountPaid > 0) {
 			return {

@@ -18,3 +18,7 @@ data/cobrix.sqlite
 *.env
 dist/*
 !dist/web/
+docs/CORREO_CONVOCATORIA.md
+docs/PLAN_BACKEND.md
+docs/PLAN_FRONTEND.md
+docs/GUIA_PRUEBAS_MANUALES.md

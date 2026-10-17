@@ -28,7 +28,9 @@ export class ReconcilePaymentsUseCase {
 		const isSimulation = options.isSimulation ?? false
 		const startedAt = new Date().toISOString()
 
-		const contractIds = await this.repo.getContractsWithOpenInvoices()
+		const contractIds = this.repo.getContractsWithReconcilableInvoices
+			? await this.repo.getContractsWithReconcilableInvoices()
+			: await this.repo.getContractsWithOpenInvoices()
 		const items: PaymentEvaluationItem[] = []
 
 		let totalContractsChecked = 0
@@ -36,6 +38,8 @@ export class ReconcilePaymentsUseCase {
 		let paidInvoicesCount = 0
 		let paidAmountCents = 0
 		let partialPaymentsCount = 0
+		let reopenedInvoicesCount = 0
+		let reopenedAmountCents = 0
 
 		try {
 			for (const contractId of contractIds) {
@@ -45,13 +49,20 @@ export class ReconcilePaymentsUseCase {
 				paidInvoicesCount += result.paidCount
 				paidAmountCents += result.paidAmountCents
 				partialPaymentsCount += result.partialPaymentsCount
+				reopenedInvoicesCount += result.reopenedCount
+				reopenedAmountCents += result.reopenedAmountCents
 				items.push(...result.items)
 			}
 
 			const finishedAt = new Date().toISOString()
+			const reopenedText =
+				reopenedInvoicesCount > 0
+					? ` · Reabiertas: ${reopenedInvoicesCount} (USD ${(reopenedAmountCents / 100).toFixed(2)})`
+					: ''
+
 			const summaryText = isSimulation
-				? `Simulación · Contratos: ${totalContractsChecked} · Facturas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)})`
-				: `Contratos: ${totalContractsChecked} · Evaluadas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)}) · Parciales: ${partialPaymentsCount}`
+				? `Simulación · Contratos: ${totalContractsChecked} · Facturas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)})${reopenedText}`
+				: `Contratos: ${totalContractsChecked} · Evaluadas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)}) · Parciales: ${partialPaymentsCount}${reopenedText}`
 
 			const runId = await this.repo.recordSyncRun({
 				isSimulation,
@@ -68,6 +79,8 @@ export class ReconcilePaymentsUseCase {
 				paidInvoicesCount,
 				paidAmount: paidAmountCents / 100,
 				partialPaymentsCount,
+				reopenedInvoicesCount,
+				reopenedAmount: reopenedAmountCents / 100,
 				items,
 				isSimulation,
 				runId,
@@ -99,11 +112,24 @@ export class ReconcilePaymentsUseCase {
 		paidCount: number
 		paidAmountCents: number
 		partialPaymentsCount: number
+		reopenedCount: number
+		reopenedAmountCents: number
 		items: PaymentEvaluationItem[]
 	}> {
-		const openInvoices = await this.repo.getOpenInvoicesByContract(contractId)
-		if (openInvoices.length === 0) {
-			return { invoicesEvaluated: 0, paidCount: 0, paidAmountCents: 0, partialPaymentsCount: 0, items: [] }
+		const invoices = this.repo.getReconcilableInvoicesByContract
+			? await this.repo.getReconcilableInvoicesByContract(contractId)
+			: await this.repo.getOpenInvoicesByContract(contractId)
+
+		if (invoices.length === 0) {
+			return {
+				invoicesEvaluated: 0,
+				paidCount: 0,
+				paidAmountCents: 0,
+				partialPaymentsCount: 0,
+				reopenedCount: 0,
+				reopenedAmountCents: 0,
+				items: [],
+			}
 		}
 
 		const paymentBookRows = await this.billingApi.fetchPaymentBook(contractId)
@@ -111,39 +137,56 @@ export class ReconcilePaymentsUseCase {
 		let paidCount = 0
 		let paidAmountCents = 0
 		let partialPaymentsCount = 0
+		let reopenedCount = 0
+		let reopenedAmountCents = 0
 
-		for (const invoice of openInvoices) {
+		for (const invoice of invoices) {
 			const evaluation = PaymentEvaluatorService.evaluate(invoice, paymentBookRows)
-			items.push(evaluation)
 
-			if (evaluation.result === 'PAID') {
-				paidCount++
-				paidAmountCents += Math.round(evaluation.previousBalance * 100)
+			if (invoice.status === 'OPEN') {
+				items.push(evaluation)
 
-				if (!isSimulation) {
-					await this.repo.markInvoicePaid(
-						invoice.id,
-						evaluation.paidByInvoiceNumber ?? '',
-						evaluation.paidAt ?? startedAt,
-					)
+				if (evaluation.result === 'PAID') {
+					paidCount++
+					paidAmountCents += Math.round(evaluation.previousBalance * 100)
+
+					if (!isSimulation) {
+						await this.repo.markInvoicePaid(
+							invoice.id,
+							evaluation.paidByInvoiceNumber ?? '',
+							evaluation.paidAt ?? startedAt,
+						)
+					}
+				} else if (evaluation.result === 'PARTIAL_PAYMENT') {
+					partialPaymentsCount++
+
+					if (!isSimulation) {
+						await this.repo.updateInvoicePartialPayment(
+							invoice.id,
+							evaluation.newBalance,
+						)
+					}
 				}
-			} else if (evaluation.result === 'PARTIAL_PAYMENT') {
-				partialPaymentsCount++
+			} else if (invoice.status === 'PAID') {
+				if (evaluation.result === 'REOPENED') {
+					reopenedCount++
+					reopenedAmountCents += Math.round(evaluation.newBalance * 100)
+					items.push(evaluation)
 
-				if (!isSimulation) {
-					await this.repo.updateInvoicePartialPayment(
-						invoice.id,
-						evaluation.newBalance,
-					)
+					if (!isSimulation && this.repo.reopenInvoice) {
+						await this.repo.reopenInvoice(invoice.id, evaluation.newBalance)
+					}
 				}
 			}
 		}
 
 		return {
-			invoicesEvaluated: openInvoices.length,
+			invoicesEvaluated: invoices.length,
 			paidCount,
 			paidAmountCents,
 			partialPaymentsCount,
+			reopenedCount,
+			reopenedAmountCents,
 			items,
 		}
 	}

@@ -86,6 +86,12 @@ function getResultBadge(result: string) {
           {result}
         </span>
       )
+    case 'REOPENED':
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800">
+          REABIERTA (ANULADA)
+        </span>
+      )
     case 'ALREADY_IMPORTED':
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">

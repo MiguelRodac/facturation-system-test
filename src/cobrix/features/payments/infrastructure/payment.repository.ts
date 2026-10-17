@@ -26,12 +26,32 @@ export class SqlitePaymentRepository implements PaymentRepositoryPort {
 		return rows.map(r => r.contract_id)
 	}
 
+	async getContractsWithReconcilableInvoices(): Promise<readonly number[]> {
+		const rows = await this.db.query<{ contract_id: number }>(
+			"SELECT DISTINCT contract_id FROM invoice ORDER BY contract_id",
+		)
+		return rows.map(r => r.contract_id)
+	}
+
 	async getOpenInvoicesByContract(contractId: number): Promise<readonly OpenInvoiceRecord[]> {
 		const rows = await this.db.query<PaymentInvoiceRow>(
 			`SELECT id, external_installment_id, contract_id, customer_id, period,
 			        total_amount, balance, status
 			 FROM invoice
 			 WHERE contract_id = ? AND status = 'OPEN'
+			 ORDER BY period ASC`,
+			[contractId],
+		)
+
+		return rows.map(PaymentMapper.toOpenInvoiceRecord)
+	}
+
+	async getReconcilableInvoicesByContract(contractId: number): Promise<readonly OpenInvoiceRecord[]> {
+		const rows = await this.db.query<PaymentInvoiceRow>(
+			`SELECT id, external_installment_id, contract_id, customer_id, period,
+			        total_amount, balance, status
+			 FROM invoice
+			 WHERE contract_id = ?
 			 ORDER BY period ASC`,
 			[contractId],
 		)
@@ -61,6 +81,19 @@ export class SqlitePaymentRepository implements PaymentRepositoryPort {
 			 SET is_partial_payment = 1
 			 WHERE id = ?`,
 			[invoiceId],
+		)
+	}
+
+	async reopenInvoice(invoiceId: number, restoredBalance: number): Promise<void> {
+		await this.db.execute(
+			`UPDATE invoice
+			 SET status = 'OPEN',
+			     balance = ?,
+			     paid_by_invoice_number = NULL,
+			     paid_at = NULL,
+			     is_partial_payment = 0
+			 WHERE id = ?`,
+			[restoredBalance, invoiceId],
 		)
 	}
 

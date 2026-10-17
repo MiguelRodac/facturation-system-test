@@ -11,6 +11,7 @@ export type PaymentEvaluationResult =
 	| 'NO_EVIDENCE'
 	| 'EXONERATED'
 	| 'INCONSISTENT_ROWS'
+	| 'REOPENED'
 
 export interface PaymentEvaluationItem {
 	readonly contractId: number
@@ -31,6 +32,8 @@ export interface PaymentSummary {
 	readonly paidInvoicesCount: number
 	readonly paidAmount: number
 	readonly partialPaymentsCount: number
+	readonly reopenedInvoicesCount?: number
+	readonly reopenedAmount?: number
 	readonly items: readonly PaymentEvaluationItem[]
 	readonly isSimulation: boolean
 	readonly runId?: number

@@ -208,6 +208,18 @@ Este documento registra de forma continua cada decisión de diseño, resolución
   - **Watchdog Configurable:** Se añadió la variable de entorno `SCHEDULER_INTERVAL_SECONDS` (con valor por defecto de 60s en `.env.example`, configurable a 300s o más en producción).
   - **Event-Driven Rescheduling:** Se conectó un hook en `ConfigurationController`: cada vez que se actualizan los parámetros vía `PUT /api/v1/config`, se invoca de inmediato `scheduler.reschedule()`. Esto recalcula y sincroniza la hora programada al instante, combinando la inmediatez de una arquitectura orientada a eventos con la robustez del guardián periódico.
 
+### DEC-018: Ciclo Bidireccional de Pagos y Reapertura Automática ante Anulación en el ISP
+- **Contexto:**
+  - El enunciado original (§3.3) concibe la actualización de facturas de forma unidireccional: *"revisa cada factura abierta en Cobrix y marca pagadas las que el ISP ya cobró por completo"*.
+  - En un entorno real de ISP, las operaciones de caja pueden anular recibos de cobro previamente emitidos (por errores operativos, cheques devueltos o reversión de transacciones).
+  - Si un usuario o cajero paga una factura, Cobrix la sincroniza pasando a `PAID`, y posteriormente el cobro es anulado en la caja del ISP (`POST /__sim/anular`), el ISP restaura la deuda en la cuota (`saldo > 0`, `valor_pago = 0`). Sin embargo, una conciliación estrictamente unidireccional ignoraba la factura por no estar en estado `OPEN`, dejando a Cobrix permanentemente desfasado respecto al saldo real del cliente.
+- **Decisión y Solución Arquitectónica:**
+  - **Soporte Bidireccional (`PAID` $\rightarrow$ `OPEN`):** Se extendió `ReconcilePaymentsUseCase` y `PaymentEvaluatorService` para evaluar no solo facturas abiertas, sino también facturas en estado `PAID`.
+  - **Detección de Anulación:** Si una factura está marcada como `PAID` en Cobrix pero el libro de cuotas del ISP (`pago_informacion`) reporta `saldo_cuota > 0`, el motor clasifica el resultado como `REOPENED` (`REABIERTA (ANULADA)`).
+  - **Restitución Automática:** Cobrix reabre automáticamente la factura (`status = 'OPEN'`), restaura su saldo deudor real (`balance = saldo_cuota`), limpia el número de recibo y la fecha de pago, y actualiza el contador global de deuda viva del cliente.
+  - **Trazabilidad y Auditoría:** La corrida de sincronización registra la reapertura con el contador `Reabiertas por anulación`, y el panel web (`SyncPage.tsx`) destaca la fila con un badge distintivo `REABIERTA (ANULADA)`.
+  - **Pruebas Automatizadas:** Se añadió cobertura de prueba integral en `test/features/payments.test.ts` verificando el ciclo completo `Pagar -> Conciliar (PAID) -> Anular en caja -> Conciliar de nuevo (OPEN con saldo restaurado)`.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución

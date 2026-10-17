@@ -136,4 +136,30 @@ describe('Domain Service: PaymentEvaluatorService (§3.3 & §4)', () => {
 		const result = PaymentEvaluatorService.evaluate(mockInvoice, bookRows)
 		assert.equal(result.result, 'STILL_OPEN')
 	})
+
+	it('detects REOPENED when a previously PAID invoice has balance restored after payment annulment', () => {
+		const paidInvoice: OpenInvoiceRecord = {
+			...mockInvoice,
+			status: 'PAID',
+			balance: 0,
+		}
+		const bookRows: PaymentBookRow[] = [
+			{
+				installmentId: '7000008',
+				period: '2026-08',
+				fee: 25.0,
+				amountPaid: 0.0,
+				remainingBalance: 25.0,
+				discount: 0,
+				receiptId: 8800001,
+				receiptNumber: '008800001',
+				receiptEmissionDate: '2026-10-13',
+			},
+		]
+
+		const result = PaymentEvaluatorService.evaluate(paidInvoice, bookRows)
+		assert.equal(result.result, 'REOPENED')
+		assert.equal(result.previousBalance, 0)
+		assert.equal(result.newBalance, 25.0)
+	})
 })

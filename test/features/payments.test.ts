@@ -165,4 +165,32 @@ describe('Feature: Payment Reconciliation (docs/ENUNCIADO.md §3.3, §4, §5)', 
 		const paidCount = cobrixDb.prepare("SELECT count(*) as count FROM invoice WHERE status = 'PAID'").get() as { count: number }
 		assert.equal(paidCount.count, 0)
 	})
+
+	it('Reverses paid invoice when payment is annulled in ISP cashier after being reconciled (reopens to OPEN)', async () => {
+		// 1. Pay Elena Ruiz (900113) in ISP cashier (has 2 cuotas)
+		const elenaPay = await http.post<{ id_factura: number }>(`${baseUrl}/__sim/pagar`, { id_contrato: 900113 })
+
+		// 2. Reconcile: Both of Elena Ruiz's invoices are marked PAID
+		const firstReconcile = await reconcileUseCase.execute()
+		assert.equal(firstReconcile.paidInvoicesCount, 2)
+
+		const elenaPaidInvoices = cobrixDb.prepare(
+			"SELECT status, balance FROM invoice WHERE contract_id = 900113",
+		).all() as Array<{ status: string; balance: number }>
+		assert.equal(elenaPaidInvoices.length, 2)
+		assert.ok(elenaPaidInvoices.every(i => i.status === 'PAID' && i.balance === 0))
+
+		// 3. Annul payment in ISP cashier
+		await http.post(`${baseUrl}/__sim/anular`, { id_factura: elenaPay.id_factura })
+
+		// 4. Reconcile again: Cobrix detects payment annulment and reverts invoices to OPEN
+		const secondReconcile = await reconcileUseCase.execute()
+		assert.equal(secondReconcile.reopenedInvoicesCount, 2)
+
+		const elenaReopenedInvoices = cobrixDb.prepare(
+			"SELECT status, balance, paid_by_invoice_number, paid_at FROM invoice WHERE contract_id = 900113",
+		).all() as Array<{ status: string; balance: number; paid_by_invoice_number: string | null; paid_at: string | null }>
+		assert.equal(elenaReopenedInvoices.length, 2)
+		assert.ok(elenaReopenedInvoices.every(i => i.status === 'OPEN' && i.balance > 0 && i.paid_by_invoice_number === null && i.paid_at === null))
+	})
 })
