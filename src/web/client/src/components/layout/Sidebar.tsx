@@ -150,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
           <a
-            href="/docs"
+            href={typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4300/docs` : 'http://127.0.0.1:4300/docs'}
             target="_blank"
             rel="noreferrer"
             title={isCollapsed ? 'API Cobrix (Docs)' : undefined}
