@@ -300,10 +300,10 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Sincronización con el Administrador
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Ejecuta corridas de importación de cuotas, conciliación de pagos y auditoría forense.
           </p>
         </div>
@@ -311,7 +311,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
           <button
             onClick={() => setShowResetConfirm(true)}
             disabled={resetting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             title="Reiniciar base de datos a estado cero"
           >
             {resetting ? (
@@ -330,25 +330,25 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
         <Card
           title={
             <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 text-emerald-600" />
-              <span className="font-semibold text-slate-900 text-sm">Importar Cuotas</span>
+              <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Importar Cuotas</span>
             </div>
           }
         >
           <div className="space-y-4">
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               Recorre todos los contratos del ISP, normaliza clientes y crea facturas abiertas en Cobrix según los filtros de estado, días de gracia y ventana temporal.
             </p>
             <div className="pt-2 flex flex-wrap gap-2.5">
               <button
                 disabled={syncing !== null}
                 onClick={() => handleImport(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
                 {syncing === 'import-sim' ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
+                  <FlaskConical className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 )}
                 <span>Simular Importación</span>
               </button>
@@ -356,7 +356,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
               <button
                 disabled={syncing !== null}
                 onClick={() => handleImport(false)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 dark:shadow-none cursor-pointer disabled:opacity-50"
               >
                 {syncing === 'import-real' ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
@@ -373,25 +373,25 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
         <Card
           title={
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span className="font-semibold text-slate-900 text-sm">Conciliar Pagos</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Conciliar Pagos</span>
             </div>
           }
         >
           <div className="space-y-4">
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Inspecciona el libro de pagos del ISP para cada contrato con facturas abiertas. Detecta pagos totales, pagos parciales y asocia el número de comprobante.
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Consulta los pagos registrados en el ISP y actualiza el saldo de las facturas abiertas, marcando como pagadas aquellas que hayan sido saldadas en su totalidad.
             </p>
             <div className="pt-2 flex flex-wrap gap-2.5">
               <button
                 disabled={syncing !== null}
                 onClick={() => handleReconcile(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
                 {syncing === 'reconcile-sim' ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600 dark:text-emerald-400" />
                 ) : (
-                  <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
+                  <FlaskConical className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 )}
                 <span>Simular Conciliación</span>
               </button>
@@ -399,7 +399,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
               <button
                 disabled={syncing !== null}
                 onClick={() => handleReconcile(false)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 dark:shadow-none cursor-pointer disabled:opacity-50"
               >
                 {syncing === 'reconcile-real' ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />

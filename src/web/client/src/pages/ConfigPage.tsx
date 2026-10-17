@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Building2,
   Sliders,
@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Check,
 } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { api } from '../api/client'
@@ -53,6 +54,8 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     auto_run_enabled: false,
   })
 
+  // Track initial snapshot to compute if there are unsaved modifications
+  const [initialConfig, setInitialConfig] = useState<CompanyConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
@@ -65,7 +68,14 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
   const loadConfig = useCallback(async (isManualRefresh = false) => {
     try {
       const data = await api.getConfig()
-      setConfig(data)
+      setConfig((prev) => {
+        // If user already made edits, don't discard them on passive window focus
+        if (!isManualRefresh && initialConfig && JSON.stringify(prev) !== JSON.stringify(initialConfig)) {
+          return prev
+        }
+        setInitialConfig(data)
+        return data
+      })
       if (isManualRefresh) {
         notify('Parámetros de configuración recargados', 'info')
       }
@@ -74,7 +84,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     } finally {
       setLoading(false)
     }
-  }, [notify])
+  }, [notify, initialConfig])
 
   useEffect(() => {
     loadConfig()
@@ -104,7 +114,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
   }
 
   // Real-time Field Validations
-  const errors = {
+  const errors = useMemo(() => ({
     company_name: !config.company_name?.trim() ? 'La razón social es obligatoria.' : null,
     company_tax_id: !config.company_tax_id?.trim() ? 'El RIF / Identificación Fiscal es obligatorio.' : null,
     billing_email: !config.billing_email?.trim()
@@ -151,9 +161,15 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
       (isNaN(Number(config.max_new_amount)) || Number(config.max_new_amount) < 0)
         ? 'Debe ser mayor o igual a 0.'
         : null,
-  }
+  }), [config])
 
-  const isFormValid = Object.values(errors).every((err) => err === null)
+  const isFormValid = useMemo(() => Object.values(errors).every((err) => err === null), [errors])
+
+  // IsDirty: Only active when user actually modified at least one field from stored baseline
+  const isDirty = useMemo(() => {
+    if (!initialConfig) return false
+    return JSON.stringify(config) !== JSON.stringify(initialConfig)
+  }, [config, initialConfig])
 
   const format12Hour = (timeStr: string) => {
     if (!hourRegex.test(timeStr)) return ''
@@ -191,8 +207,14 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     }
   }
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+
+    if (!isDirty) {
+      notify('No hay cambios pendientes por guardar.', 'info')
+      return
+    }
+
     if (!isFormValid) {
       notify('Por favor corrige los campos con errores antes de guardar.', 'error')
       return
@@ -218,6 +240,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
         auto_run_enabled: config.auto_run_enabled,
       })
       setConfig(updated)
+      setInitialConfig(updated)
       onConfigUpdated(updated.company_name)
       notify('Parámetros de configuración actualizados correctamente.', 'success')
     } catch (err: unknown) {
@@ -240,7 +263,8 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Top Header with Contextual Save Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Configuración del Sistema
@@ -248,6 +272,34 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Identidad de la empresa, políticas de importación y parámetros de conexión con el ISP.
           </p>
+        </div>
+
+        {/* Header Action Button */}
+        <div className="flex items-center gap-3">
+          {isDirty && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Cambios sin guardar
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => handleSave()}
+            disabled={saving || !isDirty || !isFormValid}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-sm shadow-emerald-200 dark:shadow-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>{!isDirty ? 'Sin cambios' : 'Guardar Cambios'}</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -636,7 +688,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
             </Card>
           </div>
 
-          {/* Right Column: ISP API Integration & Actions */}
+          {/* Right Column: ISP API Integration */}
           <div className="lg:col-span-5 space-y-6">
             <Card
               title={
@@ -764,32 +816,63 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
                 )}
               </div>
             </Card>
+          </div>
 
-            {/* Save Button */}
-            <div className="space-y-2">
-              <button
-                type="submit"
-                disabled={saving || !isFormValid}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-md shadow-emerald-200 dark:shadow-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          {/* Full-Width Global Settings Save Action Card (Spans across all columns) */}
+          <div className="col-span-12 mt-2 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                  !isDirty
+                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
+                    : isFormValid
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/60 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-200/60 dark:border-rose-800 text-rose-600 dark:text-rose-400'
+                }`}
               >
-                {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Guardando Parámetros...</span>
-                  </>
+                {!isDirty ? (
+                  <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                ) : isFormValid ? (
+                  <Sliders className="w-5 h-5" />
                 ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Guardar Parámetros de Configuración</span>
-                  </>
+                  <AlertCircle className="w-5 h-5" />
                 )}
-              </button>
-              {!isFormValid && (
-                <p className="text-xs text-rose-500 dark:text-rose-400 text-center font-medium">
-                  Corregí los campos marcados en rojo para poder guardar.
-                </p>
-              )}
+              </div>
+              <div>
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100 block">
+                  {!isDirty
+                    ? 'Configuración Global Sincronizada'
+                    : isFormValid
+                    ? 'Cambios Pendientes por Guardar'
+                    : 'Formulario con Errores de Validación'}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                  {!isDirty
+                    ? 'Todos los parámetros (empresa, políticas de corte y credenciales del ISP) están al día en la base de datos.'
+                    : isFormValid
+                    ? 'Aplica de forma simultánea los datos de empresa, reglas de corte y credenciales del ISP.'
+                    : 'Revisa los campos señalados en rojo para poder activar el guardado.'}
+                </span>
+              </div>
             </div>
+
+            <button
+              type="submit"
+              disabled={saving || !isDirty || !isFormValid}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-md shadow-emerald-200 dark:shadow-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando Parámetros Globales...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{!isDirty ? 'Sin Cambios Pendientes' : 'Guardar Toda la Configuración'}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </form>

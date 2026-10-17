@@ -184,67 +184,67 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
         <div
           className={`p-4 rounded-xl border shadow-xs transition-colors ${
             totals.total_debt > 0
-              ? 'bg-amber-50/40 border-amber-200'
-              : 'bg-emerald-50/40 border-emerald-200'
+              ? 'bg-amber-50/40 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60'
+              : 'bg-emerald-50/40 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
             <span>Deuda Total Activa</span>
             {totals.total_debt > 0 ? (
-              <AlertCircle className="w-4 h-4 text-amber-600" />
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             )}
           </div>
           <div
             className={`text-2xl font-bold font-mono tabular-nums tracking-tight ${
-              totals.total_debt > 0 ? 'text-amber-900' : 'text-emerald-900'
+              totals.total_debt > 0 ? 'text-amber-900 dark:text-amber-300' : 'text-emerald-900 dark:text-emerald-300'
             }`}
           >
             USD {totals.total_debt.toFixed(2)}
           </div>
-          <div className="text-xs text-slate-500 mt-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {totals.open_count} factura(s) abierta(s)
           </div>
         </div>
 
         {/* Facturas Conciliadas */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1">
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
             <span>Facturas Conciliadas</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-bold font-mono tabular-nums text-emerald-700 tracking-tight">
+          <div className="text-2xl font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400 tracking-tight">
             {totals.paid_count}
           </div>
-          <div className="text-xs text-slate-500 mt-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Pagadas en el ISP
           </div>
         </div>
 
         {/* Contratos Registrados */}
-        <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1">
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
             <span>Contratos Registrados</span>
-            <FileText className="w-4 h-4 text-emerald-600" />
+            <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 tracking-tight">
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100 tracking-tight">
             {totals.contracts_count}
           </div>
-          <div className="text-xs text-slate-500 mt-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Servicios contratados
           </div>
         </div>
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-200/60 rounded-xl max-w-fit">
+      <div className="flex items-center gap-1.5 p-1 bg-slate-200/60 dark:bg-slate-800 rounded-xl max-w-fit">
         <button
           onClick={() => setActiveTab('facturas')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'facturas'
-              ? 'bg-white text-emerald-800 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
@@ -252,10 +252,10 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('contratos')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'contratos'
-              ? 'bg-white text-emerald-800 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -263,10 +263,10 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('timeline')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'timeline'
-              ? 'bg-white text-emerald-800 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
@@ -281,30 +281,30 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setInvoiceFilter('all')}
-                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                   invoiceFilter === 'all'
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 Todas ({invoices.length})
               </button>
               <button
                 onClick={() => setInvoiceFilter('open')}
-                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                   invoiceFilter === 'open'
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 Abiertas ({totals.open_count})
               </button>
               <button
                 onClick={() => setInvoiceFilter('paid')}
-                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                   invoiceFilter === 'paid'
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 Pagadas ({totals.paid_count})
