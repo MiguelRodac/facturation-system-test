@@ -53,7 +53,7 @@ export function createApp(deps: AppDeps): Server {
 
 		const configRepo = new SqliteConfigurationRepository(dbClient)
 
-		scheduler = new BackgroundScheduler(dbClient, {
+		scheduler = new BackgroundScheduler({
 			intervalMs: 60_000,
 			getConfig: async () => {
 				const cfg = await configRepo.get()

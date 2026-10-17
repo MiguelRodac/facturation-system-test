@@ -5,40 +5,28 @@
  * Operates quietly and logs start, stop, triggers, and any execution errors.
  */
 
-import type { DatabaseClient } from '../database/database.client.ts'
-
 export interface ScheduleConfig {
-	autoRunEnabled: boolean
-	autoRunHour: string | null
+	readonly autoRunEnabled: boolean
+	readonly autoRunHour: string | null
 }
 
 export interface SchedulerOptions {
-	intervalMs?: number
-	onTrigger?: () => Promise<void>
-	getConfig?: () => Promise<ScheduleConfig | null>
+	readonly intervalMs?: number
+	readonly onTrigger?: () => Promise<void>
+	readonly getConfig: () => Promise<ScheduleConfig | null>
 }
 
 export class BackgroundScheduler {
-	private readonly db?: DatabaseClient
 	private timer: NodeJS.Timeout | null = null
 	private readonly intervalMs: number
 	private readonly onTrigger?: () => Promise<void>
-	private readonly getConfig?: () => Promise<ScheduleConfig | null>
+	private readonly getConfig: () => Promise<ScheduleConfig | null>
 	private lastRunDate: string | null = null
 
-	constructor(dbOrOptions?: DatabaseClient | SchedulerOptions, maybeOptions?: SchedulerOptions) {
-		if (dbOrOptions && typeof (dbOrOptions as DatabaseClient).queryOne === 'function') {
-			this.db = dbOrOptions as DatabaseClient
-			const options = maybeOptions ?? {}
-			this.intervalMs = options.intervalMs ?? 60_000
-			this.onTrigger = options.onTrigger
-			this.getConfig = options.getConfig
-		} else {
-			const options = (dbOrOptions as SchedulerOptions) ?? {}
-			this.intervalMs = options.intervalMs ?? 60_000
-			this.onTrigger = options.onTrigger
-			this.getConfig = options.getConfig
-		}
+	constructor(options: SchedulerOptions) {
+		this.intervalMs = options.intervalMs ?? 60_000
+		this.onTrigger = options.onTrigger
+		this.getConfig = options.getConfig
 	}
 
 	start(): void {
@@ -62,22 +50,7 @@ export class BackgroundScheduler {
 
 	private async check(): Promise<void> {
 		try {
-			let config: ScheduleConfig | null = null
-
-			if (this.getConfig) {
-				config = await this.getConfig()
-			} else if (this.db) {
-				const row = this.db.queryOne<{
-					auto_run_enabled: number
-					auto_run_hour: string | null
-				}>('SELECT auto_run_enabled, auto_run_hour FROM company_config WHERE id = 1')
-				if (row) {
-					config = {
-						autoRunEnabled: Boolean(row.auto_run_enabled),
-						autoRunHour: row.auto_run_hour,
-					}
-				}
-			}
+			const config = await this.getConfig()
 
 			if (!config || !config.autoRunEnabled || !config.autoRunHour) {
 				return
