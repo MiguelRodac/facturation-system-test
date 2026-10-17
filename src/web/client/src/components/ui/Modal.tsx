@@ -53,21 +53,21 @@ export const Modal: React.FC<ModalProps> = ({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl border border-slate-200/80 ${widthClass} w-full max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200`}
+        className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 ${widthClass} w-full max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-          <h3 className="font-semibold text-slate-900 text-base tracking-tight">{title}</h3>
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 text-sm text-slate-600 overflow-y-auto flex-1">{children}</div>
+        <div className="p-6 text-sm text-slate-600 dark:text-slate-300 overflow-y-auto flex-1">{children}</div>
         {footer && (
-          <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2.5 shrink-0">
+          <div className="px-6 py-3.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5 shrink-0">
             {footer}
           </div>
         )}

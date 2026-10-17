@@ -1,5 +1,6 @@
 import React from 'react'
 import { Check, AlertCircle, Info, Clock } from 'lucide-react'
+import { formatCaracasDateTime } from '../../utils/date'
 import type { CustomerTimelineItem } from '../../api/types'
 
 interface TimelineProps {
@@ -12,7 +13,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
   }
 
   return (
-    <div className="relative border-l-2 border-slate-200 ml-3 pl-6 space-y-6 py-2">
+    <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 pl-6 space-y-6 py-2">
       {items.map((item, idx) => {
         const isOk = item.tone === 'ok'
         const isWarn = item.tone === 'warn'
@@ -21,12 +22,12 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
         const Icon = isOk ? Check : isWarn ? AlertCircle : isInfo ? Info : Clock
 
         const dotColors = isOk
-          ? 'bg-emerald-50 text-emerald-600 border-emerald-500'
+          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 border-emerald-500'
           : isWarn
-          ? 'bg-amber-50 text-amber-600 border-amber-500'
+          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 border-amber-500'
           : isInfo
-          ? 'bg-teal-50 text-teal-600 border-teal-500'
-          : 'bg-slate-50 text-slate-500 border-slate-400'
+          ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-600 border-teal-500'
+          : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-400'
 
         return (
           <div key={idx} className="relative group">
@@ -35,16 +36,16 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
             >
               <Icon className="w-2.5 h-2.5 stroke-[2.5]" />
             </div>
-            <div className="flex-1 min-w-0 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-xs hover:border-slate-300 transition-colors">
+            <div className="flex-1 min-w-0 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className="font-semibold text-xs text-slate-900 truncate">
+                <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 truncate">
                   {item.title}
                 </span>
                 <span className="text-[11px] font-mono tabular-nums text-slate-400 shrink-0">
-                  {item.date}
+                  {formatCaracasDateTime(item.date)}
                 </span>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 {item.description}
               </p>
             </div>

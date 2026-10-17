@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="cobrix-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#2dd4bf" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#cobrix-grad)" />
+  <path transform="translate(4, 4)" fill="#ffffff" d="M21.5 5.5c-.8.8-2 .9-2.9.3L15 9.4c-.1.1-.3.2-.5.2-.4 0-.8-.3-.8-.8 0-.2.1-.4.2-.5l3.6-3.6c-.6-.9-.5-2.1.3-2.9 1-1 2.6-.9 3.6.1 1 1 1.1 2.6.1 3.6zm-8.8 6.2c.4-.4 1-.4 1.4 0l1.4 1.4c.4.4.4 1 0 1.4l-5 5c-.2.2-.4.3-.7.3H6c-.6 0-1-.4-1-1v-3.8c0-.3.1-.5.3-.7l7.4-7.4z" />
+</svg>

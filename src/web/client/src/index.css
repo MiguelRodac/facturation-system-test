@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     margin: 0;
@@ -8,5 +10,10 @@
     background-color: #f8fafc;
     color: #0f172a;
     -webkit-font-smoothing: antialiased;
+  }
+
+  .dark body {
+    background-color: #090d16;
+    color: #f1f5f9;
   }
 }

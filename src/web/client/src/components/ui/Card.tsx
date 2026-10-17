@@ -11,13 +11,13 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ title, action, children, className = '', style }) => {
   return (
     <div
-      className={`bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden ${className}`}
+      className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden ${className}`}
       style={style}
     >
       {(title || action) && (
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
           {typeof title === 'string' ? (
-            <h3 className="font-semibold text-slate-800 text-sm tracking-tight">{title}</h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm tracking-tight">{title}</h3>
           ) : (
             title
           )}

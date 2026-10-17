@@ -55,9 +55,10 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-  testConnection: () =>
+  testConnection: (credentials?: { api_url?: string; api_user?: string; api_password?: string }) =>
     request<{ connected: boolean; ok?: boolean; message: string; total_contracts?: number }>('/config/test-connection', {
       method: 'POST',
+      body: credentials ? JSON.stringify(credentials) : undefined,
     }),
 
   // Customers

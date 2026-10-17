@@ -26,12 +26,12 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
           <div
             key={t.id}
             onClick={() => onDismiss(t.id)}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl bg-white shadow-lg border transition-all cursor-pointer hover:opacity-95 ${
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-slate-900 shadow-lg border transition-all cursor-pointer hover:opacity-95 ${
               isSuccess
-                ? 'border-emerald-200 text-slate-800'
+                ? 'border-emerald-200 dark:border-emerald-800 text-slate-800 dark:text-slate-100'
                 : isError
-                ? 'border-rose-200 text-slate-800'
-                : 'border-teal-200 text-slate-800'
+                ? 'border-rose-200 dark:border-rose-800 text-slate-800 dark:text-slate-100'
+                : 'border-teal-200 dark:border-teal-800 text-slate-800 dark:text-slate-100'
             }`}
           >
             <Icon

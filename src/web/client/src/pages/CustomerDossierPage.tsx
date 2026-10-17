@@ -19,7 +19,7 @@ import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Timeline } from '../components/common/Timeline'
 import { api } from '../api/client'
-import { formatCaracasDateTime } from '../utils/date'
+import { formatCaracasDateTime, formatCaracasDate } from '../utils/date'
 import type { CustomerDossier } from '../api/types'
 
 interface CustomerDossierPageProps {
@@ -169,8 +169,8 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 {profile.origin || 'ISP Billing API'}
               </div>
               {profile.created_at && (
-                <div className="text-[11px] font-mono tabular-nums text-slate-400">
-                  Alta: {profile.created_at.split('T')[0]}
+                <div className="text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                  Alta: {formatCaracasDate(profile.created_at)}
                 </div>
               )}
             </div>
@@ -346,11 +346,11 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                       <td className="py-3 px-4 font-medium text-slate-900">
                         {inv.period}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums text-slate-500">
-                        {inv.due_date}
+                      <td className="py-3 px-4 font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                        {formatCaracasDate(inv.due_date)}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums text-slate-500">
-                        {inv.cutoff_date}
+                      <td className="py-3 px-4 font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                        {formatCaracasDate(inv.cutoff_date)}
                       </td>
                       <td className="py-3 px-4 font-mono tabular-nums text-slate-700">
                         USD {inv.total_amount.toFixed(2)}
