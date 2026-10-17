@@ -264,6 +264,24 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.ok(problem.errors.some(e => e.field.includes('auto_run_hour')))
 	})
 
+	it('PUT /api/v1/config returns 422 RFC 9457 when email or api_url are invalid format', async () => {
+		const res = await fetch(`${apiUrl}/api/v1/config`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				billing_email: 'not-an-email',
+				api_url: 'not-a-valid-url',
+			}),
+		})
+		assert.equal(res.status, 422)
+		assert.equal(res.headers.get('content-type'), 'application/problem+json')
+		const problem = await res.json() as { status: number; title: string; errors: Array<{ field: string; message: string }> }
+		assert.equal(problem.status, 422)
+		assert.equal(problem.title, 'Validation Error')
+		assert.ok(problem.errors.some(e => e.field.includes('billing_email')))
+		assert.ok(problem.errors.some(e => e.field.includes('api_url')))
+	})
+
 	it('returns 400 RFC 9457 Bad Request when client sends malformed JSON', async () => {
 		const res = await fetch(`${apiUrl}/api/v1/config`, {
 			method: 'PUT',

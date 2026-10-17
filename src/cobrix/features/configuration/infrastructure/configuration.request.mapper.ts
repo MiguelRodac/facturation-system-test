@@ -17,8 +17,8 @@ export const updateConfigurationSchema = z
 	.object({
 		company_name: z.string().trim().min(1, 'Company name cannot be empty').optional(),
 		company_tax_id: z.string().trim().min(1, 'Tax ID cannot be empty').optional(),
-		billing_email: z.string().trim().optional(),
-		api_url: z.string().trim().min(1, 'API URL cannot be empty').optional(),
+		billing_email: z.string().trim().email('Must be a valid email address').optional(),
+		api_url: z.string().trim().url('Must be a valid HTTP or HTTPS URL').optional(),
 		api_user: z.string().trim().min(1, 'API user cannot be empty').optional(),
 		api_password: z.string().optional(),
 		importable_statuses: stringArraySchema.optional(),
@@ -41,7 +41,7 @@ export const updateConfigurationSchema = z
 export type UpdateConfigurationSchemaType = z.infer<typeof updateConfigurationSchema>
 
 export const testConnectionSchema = z.object({
-	api_url: z.string().trim().min(1).optional(),
+	api_url: z.string().trim().url('Must be a valid HTTP or HTTPS URL').optional(),
 	api_user: z.string().trim().min(1).optional(),
 	api_password: z.string().optional(),
 }).transform((parsed) => ({

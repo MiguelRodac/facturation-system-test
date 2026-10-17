@@ -319,21 +319,21 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
               No hay facturas para el filtro seleccionado.
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-5 -mb-5">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-y border-slate-200 bg-slate-50/75 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="py-2.5 px-4">Cuota ID</th>
-                    <th className="py-2.5 px-4">Período</th>
-                    <th className="py-2.5 px-4">Vencimiento</th>
-                    <th className="py-2.5 px-4">Corte</th>
-                    <th className="py-2.5 px-4">Monto</th>
-                    <th className="py-2.5 px-4">Saldo</th>
-                    <th className="py-2.5 px-4">Estado</th>
-                    <th className="py-2.5 px-4">Recibo / Pago</th>
+            <div className="overflow-x-auto rounded-lg border border-slate-100">
+              <table className="w-full text-left text-sm divide-y divide-slate-100">
+                <thead className="bg-slate-50/75">
+                  <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <th className="py-2.5 px-4 whitespace-nowrap">Cuota ID</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Período</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Vencimiento</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Corte</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Monto</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Saldo</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Estado</th>
+                    <th className="py-2.5 px-4 whitespace-nowrap">Recibo / Pago</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+                <tbody className="divide-y divide-slate-100 text-xs text-slate-600 bg-white">
                   {filteredInvoices.map((inv) => (
                     <tr
                       key={inv.id || inv.external_installment_id}
@@ -398,20 +398,20 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
 
       {/* Tab 2: Contratos */}
       {activeTab === 'contratos' && (
-        <Card title="Contratos en el administrador" description="Servicios de telecomunicaciones asociados al expediente">
-          <div className="overflow-x-auto -mx-5 -mb-5">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-y border-slate-200 bg-slate-50/75 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-4">ID Contrato</th>
-                  <th className="py-2.5 px-4">Código</th>
-                  <th className="py-2.5 px-4">Plan Contratado</th>
-                  <th className="py-2.5 px-4">Tarifa Mensual</th>
-                  <th className="py-2.5 px-4">Sucursal</th>
-                  <th className="py-2.5 px-4">Estado</th>
+        <Card title="Contratos en el administrador">
+          <div className="overflow-x-auto rounded-lg border border-slate-100">
+            <table className="w-full text-left text-sm divide-y divide-slate-100">
+              <thead className="bg-slate-50/75">
+                <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-2.5 px-4 whitespace-nowrap">ID Contrato</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Código</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Plan Contratado</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Tarifa Mensual</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Sucursal</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
+              <tbody className="divide-y divide-slate-100 text-xs text-slate-600 bg-white">
                 {contracts.map((c) => {
                   const isActivo = c.status === 'ACTIVO'
                   const isCortado = c.status === 'CORTADO'

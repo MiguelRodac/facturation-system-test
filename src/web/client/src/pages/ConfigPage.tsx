@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Building2,
   Sliders,
@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  RefreshCw,
 } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { api } from '../api/client'
@@ -42,6 +43,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
   })
 
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{
@@ -50,20 +52,32 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     total_contracts?: number
   } | null>(null)
 
-  useEffect(() => {
-    async function loadConfig() {
-      try {
-        setLoading(true)
-        const data = await api.getConfig()
-        setConfig(data)
-      } catch (err: unknown) {
-        notify((err as Error).message, 'error')
-      } finally {
-        setLoading(false)
+  const loadConfig = useCallback(async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) setRefreshing(true)
+      const data = await api.getConfig()
+      setConfig(data)
+      if (isManualRefresh) {
+        notify('Parámetros de configuración recargados', 'info')
       }
+    } catch (err: unknown) {
+      notify((err as Error).message, 'error')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
     }
-    loadConfig()
   }, [notify])
+
+  useEffect(() => {
+    loadConfig()
+  }, [loadConfig])
+
+  // Window focus real-time sync
+  useEffect(() => {
+    const onFocus = () => loadConfig(false)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [loadConfig])
 
   const toggleStatus = (status: string) => {
     const current = config.importable_statuses || []
@@ -148,13 +162,27 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Configuración del Sistema
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Identidad de la empresa, políticas de importación y parámetros de conexión con el ISP.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Configuración del Sistema
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Identidad de la empresa, políticas de importación y parámetros de conexión con el ISP.
+          </p>
+        </div>
+        <div>
+          <button
+            type="button"
+            onClick={() => loadConfig(true)}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Recargar parámetros desde la base de datos"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+            <span>Refrescar</span>
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">

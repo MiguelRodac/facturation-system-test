@@ -21,6 +21,7 @@ const envSchema = z.object({
 	SANDBOX_TODAY: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'SANDBOX_TODAY must be in YYYY-MM-DD format').default('2026-10-13'),
 	COBRIX_API_KEY: z.string().min(8, 'COBRIX_API_KEY must have at least 8 characters'),
 	VITE_API_KEY: z.string().min(8).optional(),
+	VITE_API_URL: z.string().optional(),
 })
 
 export type AppEnvironment = z.infer<typeof envSchema>
@@ -58,6 +59,7 @@ export function loadAndValidateEnv(options: { required?: boolean } = {}): AppEnv
 		SANDBOX_TODAY: process.env.SANDBOX_TODAY,
 		COBRIX_API_KEY: process.env.COBRIX_API_KEY,
 		VITE_API_KEY: process.env.VITE_API_KEY,
+		VITE_API_URL: process.env.VITE_API_URL,
 	})
 
 	if (!parseResult.success) {

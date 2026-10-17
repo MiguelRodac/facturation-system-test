@@ -69,7 +69,9 @@ export class BillingApiClient {
 	private tokenExpiresAtMs = 0
 
 	constructor(config: BillingApiClientConfig) {
-		this.baseUrl = config.baseUrl.replace(/\/+$/, '')
+		const rawUrl = config.baseUrl?.trim() || 'http://127.0.0.1:4310'
+		const normalized = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) ? rawUrl : `http://${rawUrl}`
+		this.baseUrl = normalized.replace(/\/+$/, '')
 		this.username = config.username
 		this.password = config.password
 		this.http = config.httpClient ?? new HttpClientService({ timeoutMs: 10_000 })

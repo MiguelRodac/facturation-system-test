@@ -8,7 +8,8 @@ import type {
   DashboardSummary,
 } from './types'
 
-const BASE_URL = '/api/v1'
+const RAW_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
+const BASE_URL = RAW_URL ? RAW_URL.replace(/\/+$/, '') : '/api/v1'
 const API_KEY = (import.meta.env.VITE_API_KEY as string | undefined)?.trim()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {

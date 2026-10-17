@@ -55,14 +55,6 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  // Initial company name load
-  useEffect(() => {
-    api
-      .getConfig()
-      .then((cfg) => setCompanyName(cfg.company_name))
-      .catch(() => {})
-  }, [])
-
   const handleNavigate = (page: PageId) => {
     setSelectedCustomerId(null)
     setCurrentPage(page)
@@ -89,6 +81,7 @@ export const App: React.FC = () => {
         <DashboardPage
           onNavigate={handleNavigate}
           onSelectCustomer={handleSelectCustomer}
+          onProviderLoaded={(name) => setCompanyName(name)}
           notify={notify}
         />
       )}

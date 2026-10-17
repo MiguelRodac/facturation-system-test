@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Users,
   DollarSign,
@@ -19,6 +19,7 @@ import type { PageId } from '../components/layout/Navbar'
 interface DashboardPageProps {
   onNavigate: (page: PageId) => void
   onSelectCustomer: (id: string) => void
+  onProviderLoaded?: (name: string) => void
   notify: (text: string, type: 'success' | 'error' | 'info') => void
 }
 
@@ -54,27 +55,46 @@ function parseSummaryBadges(summary: string): string[] {
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigate,
   onSelectCustomer,
+  onProviderLoaded,
   notify,
 }) => {
   const [data, setData] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const loadData = useCallback(async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) setRefreshing(true)
+      const dashboard = await api.getDashboard()
+      setData(dashboard)
+      if (onProviderLoaded && dashboard.provider?.company_name) {
+        onProviderLoaded(dashboard.provider.company_name)
+      }
+      if (isManualRefresh) {
+        notify('Datos actualizados en tiempo real', 'info')
+      }
+    } catch (err: unknown) {
+      notify((err as Error).message, 'error')
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [notify, onProviderLoaded])
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true)
-        const dashboard = await api.getDashboard()
-        setData(dashboard)
-      } catch (err: unknown) {
-        notify((err as Error).message, 'error')
-      } finally {
-        setLoading(false)
-      }
-    }
     loadData()
-  }, [notify])
+  }, [loadData])
 
-  if (loading) {
+  // Real-time synchronization on window focus
+  useEffect(() => {
+    const handleFocus = () => {
+      loadData(false)
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [loadData])
+
+  if (loading && !data) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-400">
         <div className="flex items-center gap-3">
@@ -103,10 +123,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             Monitoreo en tiempo real de cartera, sincronizaciones y conciliaciones del ISP.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => loadData(true)}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Refrescar métricas ahora"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+            <span>Refrescar</span>
+          </button>
           <button
             onClick={() => onNavigate('sincronizacion')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-xs shadow-emerald-200"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-xs shadow-emerald-200 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Sincronizar Cartera</span>
@@ -295,7 +324,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           action={
             <button
               onClick={() => onNavigate('clientes')}
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors cursor-pointer"
             >
               <span>Ver todos</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -307,32 +336,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               No hay clientes registrados o con saldo deudor.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    <th className="pb-3 font-medium">Cliente</th>
-                    <th className="pb-3 font-medium">Documento</th>
-                    <th className="pb-3 font-medium text-center">Facturas</th>
-                    <th className="pb-3 font-medium text-right">Deuda</th>
-                    <th className="pb-3 font-medium text-right">Acción</th>
+            <div className="overflow-x-auto rounded-lg border border-slate-100">
+              <table className="w-full text-left text-sm divide-y divide-slate-100">
+                <thead className="bg-slate-50/75">
+                  <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th className="py-3 px-4 font-medium whitespace-nowrap">Cliente</th>
+                    <th className="py-3 px-4 font-medium whitespace-nowrap">Documento</th>
+                    <th className="py-3 px-4 font-medium text-center whitespace-nowrap">Facturas</th>
+                    <th className="py-3 px-4 font-medium text-right whitespace-nowrap">Deuda</th>
+                    <th className="py-3 px-4 font-medium text-right whitespace-nowrap">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   {topDebtors.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/70 transition-colors group">
-                      <td className="py-3 font-semibold text-slate-900">{c.name}</td>
-                      <td className="py-3 font-mono tabular-nums text-xs text-slate-600">{c.id}</td>
-                      <td className="py-3 text-center">
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">{c.name}</td>
+                      <td className="py-3 px-4 font-mono tabular-nums text-xs text-slate-600 whitespace-nowrap">{c.id}</td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <Badge variant="open">{c.open_invoices_count} abiertas</Badge>
                       </td>
-                      <td className="py-3 text-right font-mono tabular-nums font-bold text-amber-700">
+                      <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-amber-700 whitespace-nowrap">
                         USD {c.total_debt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
                         <button
                           onClick={() => onSelectCustomer(c.id)}
-                          className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                          className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer"
                         >
                           Expediente &rarr;
                         </button>
@@ -352,7 +381,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         action={
           <button
             onClick={() => onNavigate('sincronizacion')}
-            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>Ver historial completo</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -364,25 +393,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             Aún no se han ejecutado corridas de sincronización.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="pb-3 font-medium">ID</th>
-                  <th className="pb-3 font-medium">Tipo / Modo</th>
-                  <th className="pb-3 font-medium">Fecha</th>
-                  <th className="pb-3 font-medium">Resultado / Métricas</th>
+          <div className="overflow-x-auto rounded-lg border border-slate-100">
+            <table className="w-full text-left text-sm divide-y divide-slate-100">
+              <thead className="bg-slate-50/75">
+                <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">ID</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Tipo / Modo</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Fecha</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Resultado / Métricas</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {recentRuns.map((r) => {
                   const parts = parseSummaryBadges(r.summary)
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 font-mono tabular-nums text-xs text-slate-400">
+                    <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-mono tabular-nums text-xs text-slate-400 whitespace-nowrap">
                         #{r.id}
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <Badge variant={r.type === 'IMPORT' ? 'info' : 'paid'}>
                             {r.type === 'IMPORT' ? 'Importación' : 'Conciliación'}
@@ -392,10 +421,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                           )}
                         </div>
                       </td>
-                      <td className="py-3.5 text-xs text-slate-600 font-mono tabular-nums">
+                      <td className="py-3 px-4 text-xs text-slate-600 font-mono tabular-nums whitespace-nowrap">
                         {r.finished_at || r.started_at}
                       </td>
-                      <td className="py-3.5">
+                      <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1.5">
                           {parts.length > 0 ? (
                             parts.map((part, pIdx) => {

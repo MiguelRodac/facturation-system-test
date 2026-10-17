@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Download,
   CheckCircle2,
   Trash2,
   Eye,
-  EyeOff,
   RefreshCw,
   Play,
   FlaskConical,
@@ -12,6 +11,7 @@ import {
   Calendar,
   AlertCircle,
   FileCheck,
+  Loader2,
 } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
@@ -55,7 +55,9 @@ function parseSummaryBadges(summary: string): string[] {
 export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
   const [runs, setRuns] = useState<SyncRun[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [syncing, setSyncing] = useState<string | null>(null)
+  const [resetting, setResetting] = useState(false)
 
   // Audit Modal State
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null)
@@ -66,21 +68,32 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
   // Confirm Reset Modal State
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
-  const loadRuns = async () => {
+  const loadRuns = useCallback(async (isManualRefresh = false) => {
     try {
-      setLoading(true)
+      if (isManualRefresh) setRefreshing(true)
       const data = await api.getRuns()
       setRuns(data)
+      if (isManualRefresh) {
+        notify('Historial de corridas actualizado', 'info')
+      }
     } catch (err: unknown) {
       notify((err as Error).message, 'error')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [notify])
 
   useEffect(() => {
     loadRuns()
-  }, [])
+  }, [loadRuns])
+
+  // Window focus real-time sync
+  useEffect(() => {
+    const onFocus = () => loadRuns(false)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [loadRuns])
 
   const handleImport = async (simulate: boolean) => {
     try {
@@ -143,7 +156,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
   const handleResetData = async () => {
     setShowResetConfirm(false)
     try {
-      setLoading(true)
+      setResetting(true)
       notify('Reiniciando base de datos de Cobrix...', 'info')
       const res = await api.resetData()
       notify(res.message || 'Base de datos reiniciada con éxito. Sandbox en cero.', 'success')
@@ -151,7 +164,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
     } catch (err: unknown) {
       notify((err as Error).message, 'error')
     } finally {
-      setLoading(false)
+      setResetting(false)
     }
   }
 
@@ -167,13 +180,28 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
             Ejecuta corridas de importación de cuotas, conciliación de pagos y auditoría forense.
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => loadRuns(true)}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Refrescar historial ahora"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+            <span>Refrescar</span>
+          </button>
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer"
+            disabled={resetting}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            title="Reiniciar base de datos a estado cero"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Borrar datos importados</span>
+            {resetting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+            <span>{resetting ? 'Reiniciando...' : 'Borrar datos importados'}</span>
           </button>
         </div>
       </div>
@@ -199,33 +227,42 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                 onClick={() => handleImport(true)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
-                <span>Simular importación</span>
+                {syncing === 'import-sim' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                ) : (
+                  <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
+                )}
+                <span>Simular Importación</span>
               </button>
+
               <button
                 disabled={syncing !== null}
                 onClick={() => handleImport(false)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 cursor-pointer disabled:opacity-50"
               >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Importar cuotas</span>
+                {syncing === 'import-real' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                )}
+                <span>Ejecutar Importación Real</span>
               </button>
             </div>
           </div>
         </Card>
 
-        {/* Card 2: Actualizar Facturas Pagadas */}
+        {/* Card 2: Conciliar Pagos */}
         <Card
           title={
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span className="font-semibold text-slate-900 text-sm">Actualizar Facturas Pagadas</span>
+              <span className="font-semibold text-slate-900 text-sm">Conciliar Pagos</span>
             </div>
           }
         >
           <div className="space-y-4">
             <p className="text-xs text-slate-600 leading-relaxed">
-              Revisa el libro de cobros del ISP (<span className="font-mono text-slate-700">pago_informacion</span>) para cada factura abierta en Cobrix y concilia automáticamente las canceladas.
+              Inspecciona el libro de pagos del ISP para cada contrato con facturas abiertas. Detecta pagos totales, pagos parciales y asocia el número de comprobante.
             </p>
             <div className="pt-2 flex flex-wrap gap-2.5">
               <button
@@ -233,16 +270,25 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                 onClick={() => handleReconcile(true)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
               >
-                <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
-                <span>Simular conciliación</span>
+                {syncing === 'reconcile-sim' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                ) : (
+                  <FlaskConical className="w-3.5 h-3.5 text-slate-500" />
+                )}
+                <span>Simular Conciliación</span>
               </button>
+
               <button
                 disabled={syncing !== null}
                 onClick={() => handleReconcile(false)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold transition-all shadow-xs shadow-emerald-200 cursor-pointer disabled:opacity-50"
               >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Actualizar pagadas</span>
+                {syncing === 'reconcile-real' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                )}
+                <span>Ejecutar Conciliación Real</span>
               </button>
             </div>
           </div>
@@ -250,47 +296,40 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       </div>
 
       {/* Historial de Corridas */}
-      <Card
-        title={
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-500" />
-            <span className="font-semibold text-slate-900 text-sm">Historial de Corridas</span>
-          </div>
-        }
-      >
+      <Card title="Historial Operacional de Sincronizaciones">
         {loading ? (
-          <div className="flex items-center justify-center py-12 text-slate-400">
+          <div className="flex items-center justify-center py-16 text-slate-400">
             <RefreshCw className="w-5 h-5 animate-spin mr-2 text-emerald-600" />
-            <span className="text-sm">Cargando historial de corridas...</span>
+            <span className="text-sm font-medium">Cargando historial de corridas...</span>
           </div>
         ) : runs.length === 0 ? (
           <p className="text-sm text-slate-400 py-8 text-center">
             No se han registrado corridas de sincronización aún.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="pb-3 font-medium">ID</th>
-                  <th className="pb-3 font-medium">Tipo / Modo</th>
-                  <th className="pb-3 font-medium">Estado</th>
-                  <th className="pb-3 font-medium">Fecha</th>
-                  <th className="pb-3 font-medium">Duración</th>
-                  <th className="pb-3 font-medium">Resultado</th>
-                  <th className="pb-3 font-medium text-right">Detalle</th>
+          <div className="overflow-x-auto rounded-lg border border-slate-100">
+            <table className="w-full text-left text-sm divide-y divide-slate-100">
+              <thead className="bg-slate-50/75">
+                <tr className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">ID</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Tipo / Modo</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Estado</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Fecha</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Duración</th>
+                  <th className="py-3 px-4 font-medium whitespace-nowrap">Resultado</th>
+                  <th className="py-3 px-4 font-medium text-right whitespace-nowrap">Detalle</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {runs.map((r) => {
                   const parts = parseSummaryBadges(r.summary)
 
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 font-mono tabular-nums text-xs text-slate-400">
+                    <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-mono tabular-nums text-xs text-slate-400 whitespace-nowrap">
                         #{r.id}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <Badge variant={r.type === 'IMPORT' ? 'info' : 'paid'}>
                             {r.type === 'IMPORT' ? 'Importación' : 'Conciliación'}
@@ -298,15 +337,15 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                           {r.is_simulation && <Badge variant="neutral">Sim</Badge>}
                         </div>
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <Badge variant={r.status === 'COMPLETED' ? 'paid' : 'danger'}>
                           {r.status === 'COMPLETED' ? 'Completado' : 'Fallido'}
                         </Badge>
                       </td>
-                      <td className="py-3 text-xs font-mono tabular-nums text-slate-600">
+                      <td className="py-3 px-4 text-xs font-mono tabular-nums text-slate-600 whitespace-nowrap">
                         {r.finished_at || r.started_at}
                       </td>
-                      <td className="py-3 text-xs font-mono tabular-nums text-slate-500">
+                      <td className="py-3 px-4 text-xs font-mono tabular-nums text-slate-500 whitespace-nowrap">
                         {r.duration_seconds !== undefined
                           ? `${r.duration_seconds}s`
                           : r.started_at && r.finished_at
@@ -320,7 +359,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                             )}s`
                           : '—'}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1.5">
                           {parts.length > 0 ? (
                             parts.map((part, pIdx) => {
@@ -358,7 +397,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                           )}
                         </div>
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleOpenAudit(r.id)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
@@ -380,7 +419,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       <Modal
         isOpen={selectedRunId !== null}
         onClose={handleCloseModal}
-        title={`Auditoría de Corrida #${selectedRunId || ''}`}
+        title={`Auditoría Forense de Corrida #${selectedRunId || ''}`}
         footer={
           <button
             onClick={handleCloseModal}
@@ -427,92 +466,74 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                   <button
                     type="button"
                     onClick={() => setHideZeros(!hideZeros)}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer"
                   >
-                    {hideZeros ? (
-                      <>
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Mostrar ceros</span>
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="w-3.5 h-3.5" />
-                        <span>Ocultar ceros</span>
-                      </>
-                    )}
+                    {hideZeros ? 'Mostrar contadores en cero' : 'Ocultar contadores en cero'}
                   </button>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {Object.entries(runDetail.counters)
-                    .filter(([, count]) => !hideZeros || count > 0)
-                    .map(([key, count]) => {
-                      const isZero = count === 0
-                      return (
-                        <div
-                          key={key}
-                          className={`p-3 rounded-lg border bg-white shadow-2xs transition-all ${
-                            isZero
-                              ? 'border-slate-100 opacity-45'
-                              : 'border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="text-[11px] font-mono tabular-nums text-slate-500 truncate">
-                            {key}
-                          </div>
-                          <div className="text-lg font-bold font-mono tabular-nums text-slate-900 mt-1">
-                            {count}
-                          </div>
-                        </div>
-                      )
-                    })}
+                    .filter(([, val]) => !hideZeros || val > 0)
+                    .map(([key, val]) => (
+                      <div
+                        key={key}
+                        className="p-3 bg-white rounded-lg border border-slate-200/70 shadow-xs"
+                      >
+                        <span className="block text-[11px] font-mono text-slate-400 truncate" title={key}>
+                          {key}
+                        </span>
+                        <span className="block text-lg font-bold font-mono tabular-nums text-slate-900 mt-1">
+                          {val}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
 
-            {/* Detalle Cuota por Cuota */}
+            {/* Audit Log Table */}
             <div>
               <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-3">
-                Cuotas Evaluadas ({runDetail.items.length})
+                Desglose de Ítems Evaluados ({runDetail.items.length})
               </span>
               {runDetail.items.length === 0 ? (
                 <p className="text-xs text-slate-400 py-4 text-center">
-                  No se registraron ítems individuales en esta corrida.
+                  Esta corrida no generó ítems detallados.
                 </p>
               ) : (
-                <div className="overflow-x-auto max-h-72 border border-slate-200 rounded-lg">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
-                      <tr className="text-slate-500 font-semibold">
-                        <th className="p-2.5">Contrato</th>
-                        <th className="p-2.5">Cuota ID</th>
-                        <th className="p-2.5">Período</th>
-                        <th className="p-2.5 text-right">Monto</th>
-                        <th className="p-2.5">Resultado</th>
-                        <th className="p-2.5">Motivo</th>
+                <div className="overflow-x-auto rounded-lg border border-slate-200/80 max-h-96">
+                  <table className="w-full text-left text-xs divide-y divide-slate-200/80">
+                    <thead className="bg-slate-50 sticky top-0 z-10">
+                      <tr className="text-slate-500 font-semibold uppercase tracking-wider">
+                        <th className="py-2.5 px-4 whitespace-nowrap">Contrato</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Cuota Ext.</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Período</th>
+                        <th className="py-2.5 px-4 text-right whitespace-nowrap">Monto</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Resultado</th>
+                        <th className="py-2.5 px-4 whitespace-nowrap">Motivo / Detalle</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {runDetail.items.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50/50">
-                          <td className="p-2.5 font-mono tabular-nums text-slate-700">
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {runDetail.items.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/60">
+                          <td className="py-2.5 px-4 font-mono tabular-nums text-slate-700 whitespace-nowrap">
                             {item.contract_id ?? '—'}
                           </td>
-                          <td className="p-2.5 font-mono tabular-nums text-slate-500">
+                          <td className="py-2.5 px-4 font-mono tabular-nums text-slate-500 whitespace-nowrap">
                             {item.installment_id ?? '—'}
                           </td>
-                          <td className="p-2.5 font-mono tabular-nums font-semibold text-slate-800">
+                          <td className="py-2.5 px-4 font-mono tabular-nums font-semibold text-slate-800 whitespace-nowrap">
                             {item.period ?? '—'}
                           </td>
-                          <td className="p-2.5 text-right font-mono tabular-nums font-bold text-slate-800">
+                          <td className="py-2.5 px-4 text-right font-mono tabular-nums font-bold text-slate-800 whitespace-nowrap">
                             {item.amount != null
                               ? `USD ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                               : '—'}
                           </td>
-                          <td className="p-2.5">
+                          <td className="py-2.5 px-4 whitespace-nowrap">
                             <Badge
                               variant={
-                                item.result === 'CREATED' || item.result === 'MARKED_PAID'
+                                item.result === 'CREATED' || item.result === 'MARKED_PAID' || item.result === 'IMPORTED'
                                   ? 'paid'
                                   : item.result === 'SIMULATED_NEW' ||
                                     item.result === 'SIMULATED_PAID'
@@ -523,7 +544,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
                               {item.result}
                             </Badge>
                           </td>
-                          <td className="p-2.5 text-slate-500 max-w-[200px] truncate" title={item.reason || ''}>
+                          <td className="py-2.5 px-4 text-slate-500 max-w-[240px] truncate" title={item.reason || ''}>
                             {item.reason || '—'}
                           </td>
                         </tr>
@@ -543,7 +564,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
       <Modal
         isOpen={showResetConfirm}
         onClose={() => setShowResetConfirm(false)}
-        title="Confirmar Reinicio de Cartera"
+        title="Confirmar Reinicio de Cartera (Sandbox)"
         footer={
           <div className="flex gap-2">
             <button
@@ -554,15 +575,16 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
             </button>
             <button
               onClick={handleResetData}
-              className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+              disabled={resetting}
+              className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             >
-              Confirmar Reinicio
+              {resetting ? 'Reiniciando...' : 'Sí, reiniciar base de datos'}
             </button>
           </div>
         }
       >
         <p className="text-sm text-slate-600 leading-relaxed">
-          Esta acción le permitirá volver a importar toda la cartera desde cero en la siguiente corrida de importación.
+          Esta acción eliminará de forma irreversible todas las facturas, contratos, clientes y registros de sincronización de la base de datos de Cobrix, permitiéndote reiniciar las pruebas desde cero (sandbox limpio). La configuración de la empresa y del ISP se mantendrá intacta.
         </p>
       </Modal>
     </div>
