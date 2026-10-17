@@ -24,6 +24,8 @@ export interface AppDeps {
 	readonly assignmentPath: string
 	/** Optional path to Cobrix SQLite DB. */
 	readonly cobrixDbPath?: string
+	/** Optional API key for REST API security. */
+	readonly apiKey?: string
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -47,6 +49,7 @@ export function createApp(deps: AppDeps): Server {
 		apiRouter = new CobrixApiRouter({
 			db: dbClient,
 			billingApiUrl: deps.simulatorUrl,
+			apiKey: deps.apiKey,
 		})
 	}
 

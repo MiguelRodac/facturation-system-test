@@ -81,3 +81,14 @@ export class ConflictError extends AppError {
 		super(message)
 	}
 }
+
+export class UnauthorizedError extends AppError {
+	readonly status = 401
+	readonly title = 'Unauthorized'
+	readonly type = 'https://cobrix.com/errors/unauthorized'
+
+	constructor(message = 'Authentication token is missing or invalid') {
+		super(message)
+	}
+}
+

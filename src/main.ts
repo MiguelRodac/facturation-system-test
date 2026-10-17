@@ -10,18 +10,19 @@
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadAndValidateEnv } from './cobrix/shared/infrastructure/config/env.config.ts'
 
-process.env.SANDBOX_TODAY ??= '2026-10-13'
+const env = loadAndValidateEnv({ required: true })
 
 const { DEFAULT_BILLING_API_DB, seedBillingApi } = await import('./billing-api/seed.ts')
 const { createBillingApiServer } = await import('./billing-api/server.ts')
 const { createApp } = await import('./web/app.ts')
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const billingApiDb = process.env.BILLING_API_DB ?? DEFAULT_BILLING_API_DB
-const appPort = Number(process.env.PORT ?? 4300)
-const billingApiPort = Number(process.env.BILLING_API_PORT ?? 4310)
-const host = process.env.HOST ?? '127.0.0.1'
+const billingApiDb = resolve(root, env.BILLING_API_DB)
+const appPort = env.PORT
+const billingApiPort = env.BILLING_API_PORT
+const host = env.HOST
 
 if (!existsSync(billingApiDb)) seedBillingApi(billingApiDb)
 
@@ -35,23 +36,25 @@ if (!existsSync(distWebIndex)) {
 const billingApi = createBillingApiServer(billingApiDb)
 await billingApi.listen(billingApiPort, host)
 const simulatorUrl = `http://${host}:${billingApiPort}`
-const cobrixDbPath = resolve(root, 'data/cobrix.sqlite')
+const cobrixDbPath = resolve(root, env.COBRIX_DB_PATH)
 const app = createApp({
 	simulatorUrl,
 	assignmentPath: resolve(root, 'docs/ENUNCIADO.md'),
 	cobrixDbPath,
+	apiKey: env.COBRIX_API_KEY,
 })
 app.listen(appPort, host)
 
 console.log(`\n🚀 ==========================================`)
 console.log(`   COBRIX BILLING SYSTEM OPERATIONAL`)
 console.log(`   ==========================================`)
-console.log(`   Panel Web (React SPA):    http://${host}:${appPort}`)
-console.log(`   Cobrix Swagger UI:        http://${host}:${appPort}/docs`)
-console.log(`   Cobrix OpenAPI 3.0:       http://${host}:${appPort}/api/v1/openapi.json`)
+console.log(`   Panel Web (React SPA):     http://${host}:${appPort}`)
+console.log(`   Cobrix Swagger UI:         http://${host}:${appPort}/docs`)
+console.log(`   Cobrix OpenAPI 3.0:        http://${host}:${appPort}/api/v1/openapi.json`)
 console.log(`   API del Administrador ISP: http://${host}:${billingApiPort}/api/v1`)
-console.log(`   Swagger del ISP:          http://${host}:${billingApiPort}/docs`)
-console.log(`   Fecha de la prueba:       ${process.env.SANDBOX_TODAY}`)
+console.log(`   Swagger del ISP:           http://${host}:${billingApiPort}/docs`)
+console.log(`   Token de Seguridad (API):  ${env.COBRIX_API_KEY}`)
+console.log(`   Fecha de la prueba:        ${env.SANDBOX_TODAY}`)
 console.log(`   ==========================================\n`)
 
 const shutdown = (): void => {

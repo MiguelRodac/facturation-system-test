@@ -8,6 +8,7 @@ import type {
 } from './types'
 
 const BASE_URL = '/api/v1'
+const API_KEY = (import.meta.env.VITE_API_KEY as string | undefined)?.trim()
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers || {})
@@ -16,6 +17,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
   if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
+  }
+  if (API_KEY && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${API_KEY}`)
+    headers.set('X-API-Key', API_KEY)
   }
 
   const response = await fetch(`${BASE_URL}${path}`, {

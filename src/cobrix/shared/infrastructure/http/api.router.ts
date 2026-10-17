@@ -48,6 +48,7 @@ import { BillingApiClient } from '../billing-api.client.ts'
 import type { DatabaseClient } from '../database/database.client.ts'
 import { NotFoundError } from '../../domain/errors/app.errors.ts'
 import { rfc9457ErrorMiddleware } from '../middleware/rfc9457-error-handler.ts'
+import { createApiKeyAuthMiddleware } from '../middleware/api-key-auth.ts'
 import { OPENAPI_SPEC, serveSwaggerUI } from '../openapi/openapi.ts'
 import { BackgroundScheduler } from '../scheduler/scheduler.ts'
 
@@ -55,6 +56,7 @@ export interface CobrixApiRouterOptions {
 	db: DatabaseClient
 	billingApiUrl?: string
 	schedulerIntervalMs?: number
+	apiKey?: string
 }
 
 export class CobrixApiRouter {
@@ -124,13 +126,16 @@ export class CobrixApiRouter {
 		this.app = express()
 		this.app.use(express.json())
 
-		// OpenAPI Spec & Swagger UI
+		// OpenAPI Spec & Swagger UI (Public Documentation)
 		this.app.get('/api/v1/openapi.json', (_req, res) => {
 			res.status(200).json(OPENAPI_SPEC)
 		})
 		this.app.use('/docs', (req, res) => {
 			serveSwaggerUI(req, res)
 		})
+
+		// API Key / Bearer Authentication Guard for Protected Endpoints
+		this.app.use(createApiKeyAuthMiddleware({ apiKey: options.apiKey }))
 
 		// Feature Routers
 		this.app.use('/api/v1/config', createConfigurationRouter(configController))

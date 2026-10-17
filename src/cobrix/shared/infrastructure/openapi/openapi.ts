@@ -17,6 +17,10 @@ export const OPENAPI_SPEC = {
 			description: 'Servidor local Cobrix',
 		},
 	],
+	security: [
+		{ ApiKeyAuth: [] },
+		{ BearerAuth: [] },
+	],
 	paths: {
 		'/api/v1/config': {
 			get: {
@@ -582,6 +586,19 @@ export const OPENAPI_SPEC = {
 					},
 				},
 				required: ['run', 'counters', 'items'],
+			},
+		},
+		securitySchemes: {
+			ApiKeyAuth: {
+				type: 'apiKey',
+				in: 'header',
+				name: 'X-API-Key',
+				description: 'Clave de API provista en el header X-API-Key',
+			},
+			BearerAuth: {
+				type: 'http',
+				scheme: 'bearer',
+				description: 'Autenticación Bearer Token provista en el header Authorization',
 			},
 		},
 	},

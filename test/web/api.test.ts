@@ -232,4 +232,74 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.match(html, /<div id="root"><\/div>/)
 		assert.match(html, /Cobrix/)
 	})
+
+	describe('API Key Security & RFC 9457 Unauthorized', () => {
+		let securedPanel: ReturnType<typeof createApp>
+		let securedUrl: string
+		const SECURE_TOKEN = 'test-cobrix-secret-key-123'
+
+		before(async () => {
+			const cobrixDbPath = join(dir, 'cobrix.sqlite')
+			securedPanel = createApp({
+				simulatorUrl: billingApiUrl,
+				assignmentPath: fileURLToPath(new URL('../../docs/ENUNCIADO.md', import.meta.url)),
+				cobrixDbPath,
+				apiKey: SECURE_TOKEN,
+			})
+			await new Promise<void>(resolve => securedPanel.listen(0, '127.0.0.1', resolve))
+			const addr = securedPanel.address()
+			const port = typeof addr === 'object' && addr ? addr.port : 0
+			securedUrl = `http://127.0.0.1:${port}`
+		})
+
+		after(async () => {
+			await new Promise(resolve => securedPanel.close(resolve))
+		})
+
+		it('rejects unauthenticated requests with 401 RFC 9457 Unauthorized', async () => {
+			const res = await fetch(`${securedUrl}/api/v1/config`)
+			assert.equal(res.status, 401)
+			assert.equal(res.headers.get('content-type'), 'application/problem+json')
+			const body = await res.json() as { status: number; title: string; type: string }
+			assert.equal(body.status, 401)
+			assert.equal(body.title, 'Unauthorized')
+			assert.equal(body.type, 'https://cobrix.com/errors/unauthorized')
+		})
+
+		it('rejects invalid API token with 401 RFC 9457 Unauthorized', async () => {
+			const res = await fetch(`${securedUrl}/api/v1/config`, {
+				headers: { Authorization: 'Bearer wrong-token' },
+			})
+			assert.equal(res.status, 401)
+			const body = await res.json() as { status: number; title: string }
+			assert.equal(body.status, 401)
+			assert.equal(body.title, 'Unauthorized')
+		})
+
+		it('accepts valid token via Authorization: Bearer <token>', async () => {
+			const res = await fetch(`${securedUrl}/api/v1/config`, {
+				headers: { Authorization: `Bearer ${SECURE_TOKEN}` },
+			})
+			assert.equal(res.status, 200)
+			const body = await res.json() as { data: { company_name: string } }
+			assert.ok(body.data.company_name)
+		})
+
+		it('accepts valid token via X-API-Key header', async () => {
+			const res = await fetch(`${securedUrl}/api/v1/customers`, {
+				headers: { 'X-API-Key': SECURE_TOKEN },
+			})
+			assert.equal(res.status, 200)
+			const body = await res.json() as { data: unknown[] }
+			assert.ok(Array.isArray(body.data))
+		})
+
+		it('allows public access to /api/v1/openapi.json and /docs without token', async () => {
+			const openapiRes = await fetch(`${securedUrl}/api/v1/openapi.json`)
+			assert.equal(openapiRes.status, 200)
+
+			const docsRes = await fetch(`${securedUrl}/docs`)
+			assert.equal(docsRes.status, 200)
+		})
+	})
 })
