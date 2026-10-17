@@ -5,6 +5,8 @@ interface LayoutProps {
   currentPage: PageId
   onNavigate: (page: PageId) => void
   companyName: string
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
   children: React.ReactNode
 }
 
@@ -12,6 +14,8 @@ export const Layout: React.FC<LayoutProps> = ({
   currentPage,
   onNavigate,
   companyName,
+  isCollapsed = false,
+  onToggleCollapse,
   children,
 }) => {
   return (
@@ -20,8 +24,10 @@ export const Layout: React.FC<LayoutProps> = ({
         currentPage={currentPage}
         onNavigate={onNavigate}
         companyName={companyName}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={onToggleCollapse}
       />
-      <div className="flex-1 flex flex-col min-w-0 pl-64">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isCollapsed ? 'pl-20' : 'pl-64'}`}>
         <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>

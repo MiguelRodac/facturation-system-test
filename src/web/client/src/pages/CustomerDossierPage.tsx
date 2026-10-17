@@ -19,6 +19,7 @@ import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Timeline } from '../components/common/Timeline'
 import { api } from '../api/client'
+import { formatCaracasDateTime } from '../utils/date'
 import type { CustomerDossier } from '../api/types'
 
 interface CustomerDossierPageProps {
@@ -379,7 +380,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                             </span>
                             {inv.paid_at && (
                               <div className="font-mono tabular-nums text-[11px] text-slate-400">
-                                {inv.paid_at}
+                                {formatCaracasDateTime(inv.paid_at)}
                               </div>
                             )}
                           </div>

@@ -80,17 +80,6 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({
             Cartera de clientes sincronizados desde el ISP, contratos vigentes y saldos por cobrar.
           </p>
         </div>
-        <div>
-          <button
-            onClick={() => fetchCustomers(query, true)}
-            disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
-            title="Refrescar clientes ahora"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
-            <span>Refrescar</span>
-          </button>
-        </div>
       </div>
 
       <Card>

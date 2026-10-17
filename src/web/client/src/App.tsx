@@ -9,11 +9,41 @@ import { ConfigPage } from './pages/ConfigPage'
 import { ToastContainer, type ToastMessage } from './components/ui/Toast'
 import { api } from './api/client'
 
+function getInitialRoute(): { page: PageId; customerId: string | null } {
+  if (typeof window === 'undefined') return { page: 'resumen', customerId: null }
+  const hash = window.location.hash.replace(/^#\/?/, '')
+  if (hash.startsWith('clientes/')) {
+    return { page: 'clientes', customerId: hash.replace('clientes/', '') }
+  }
+  if (hash === 'clientes') return { page: 'clientes', customerId: null }
+  if (hash === 'sincronizacion') return { page: 'sincronizacion', customerId: null }
+  if (hash === 'configuracion') return { page: 'configuracion', customerId: null }
+  return { page: 'resumen', customerId: null }
+}
+
 export const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<PageId>('resumen')
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const initialRoute = getInitialRoute()
+  const [currentPage, setCurrentPage] = useState<PageId>(initialRoute.page)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialRoute.customerId)
   const [companyName, setCompanyName] = useState('Cobrix Telecom')
   const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('cobrix_sidebar_collapsed') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('cobrix_sidebar_collapsed', String(next))
+      } catch {}
+      return next
+    })
+  }
 
   const notify = useCallback((text: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9)
@@ -30,27 +60,11 @@ export const App: React.FC = () => {
   // Sync with URL Hash for natural browser navigation
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace(/^#\/?/, '')
-      if (hash.startsWith('clientes/')) {
-        const id = hash.replace('clientes/', '')
-        setSelectedCustomerId(id)
-        setCurrentPage('clientes')
-      } else if (hash === 'clientes') {
-        setSelectedCustomerId(null)
-        setCurrentPage('clientes')
-      } else if (hash === 'sincronizacion') {
-        setSelectedCustomerId(null)
-        setCurrentPage('sincronizacion')
-      } else if (hash === 'configuracion') {
-        setSelectedCustomerId(null)
-        setCurrentPage('configuracion')
-      } else {
-        setSelectedCustomerId(null)
-        setCurrentPage('resumen')
-      }
+      const route = getInitialRoute()
+      setSelectedCustomerId(route.customerId)
+      setCurrentPage(route.page)
     }
 
-    handleHashChange()
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
@@ -76,6 +90,8 @@ export const App: React.FC = () => {
       currentPage={currentPage}
       onNavigate={handleNavigate}
       companyName={companyName}
+      isCollapsed={isSidebarCollapsed}
+      onToggleCollapse={handleToggleSidebar}
     >
       {currentPage === 'resumen' && (
         <DashboardPage

@@ -171,18 +171,6 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
             Identidad de la empresa, políticas de importación y parámetros de conexión con el ISP.
           </p>
         </div>
-        <div>
-          <button
-            type="button"
-            onClick={() => loadConfig(true)}
-            disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
-            title="Recargar parámetros desde la base de datos"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
-            <span>Refrescar</span>
-          </button>
-        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
