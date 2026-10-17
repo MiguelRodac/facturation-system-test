@@ -20,6 +20,7 @@ const envSchema = z.object({
 	COBRIX_DB_PATH: z.string().default('data/cobrix.sqlite'),
 	SANDBOX_TODAY: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'SANDBOX_TODAY must be in YYYY-MM-DD format').default('2026-10-13'),
 	COBRIX_API_KEY: z.string().min(8, 'COBRIX_API_KEY must have at least 8 characters'),
+	SCHEDULER_INTERVAL_SECONDS: z.coerce.number().min(1).default(60),
 	VITE_API_KEY: z.string().min(8).optional(),
 	VITE_API_URL: z.string().optional(),
 })
@@ -58,6 +59,7 @@ export function loadAndValidateEnv(options: { required?: boolean } = {}): AppEnv
 		COBRIX_DB_PATH: process.env.COBRIX_DB_PATH,
 		SANDBOX_TODAY: process.env.SANDBOX_TODAY,
 		COBRIX_API_KEY: process.env.COBRIX_API_KEY,
+		SCHEDULER_INTERVAL_SECONDS: process.env.SCHEDULER_INTERVAL_SECONDS,
 		VITE_API_KEY: process.env.VITE_API_KEY,
 		VITE_API_URL: process.env.VITE_API_URL,
 	})

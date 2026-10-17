@@ -254,7 +254,8 @@ export const OPENAPI_SPEC = {
 		},
 		'/api/v1/sync/reset': {
 			post: {
-				summary: 'Reiniciar base de datos de Cobrix (borrar datos sincronizados e historial)',
+				summary: 'Reiniciar base de datos de Cobrix y simulador del ISP a estado cero',
+				description: 'Elimina clientes, contratos, facturas y auditorías en Cobrix y reinicia el estado original del simulador del ISP (27 contratos y cuotas base).',
 				tags: ['Sincronización'],
 				responses: {
 					'200': {
@@ -269,6 +270,7 @@ export const OPENAPI_SPEC = {
 											type: 'object',
 											properties: {
 												cleared: { type: 'boolean' },
+												ispReset: { type: 'boolean' },
 												message: { type: 'string' },
 											},
 										},

@@ -26,6 +26,8 @@ export interface AppDeps {
 	readonly cobrixDbPath?: string
 	/** Optional API key for REST API security. */
 	readonly apiKey?: string
+	/** Interval in milliseconds for background scheduler verification (default: 60000). */
+	readonly schedulerIntervalMs?: number
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -50,6 +52,7 @@ export function createApp(deps: AppDeps): Server {
 			db: dbClient,
 			billingApiUrl: deps.simulatorUrl,
 			apiKey: deps.apiKey,
+			schedulerIntervalMs: deps.schedulerIntervalMs,
 		})
 	}
 
@@ -150,6 +153,7 @@ export interface ApiServerDeps {
 	readonly cobrixDbPath: string
 	readonly simulatorUrl: string
 	readonly apiKey?: string
+	readonly schedulerIntervalMs?: number
 }
 
 export function createApiServer(deps: ApiServerDeps): Server {
@@ -159,6 +163,7 @@ export function createApiServer(deps: ApiServerDeps): Server {
 		db: dbClient,
 		billingApiUrl: deps.simulatorUrl,
 		apiKey: deps.apiKey,
+		schedulerIntervalMs: deps.schedulerIntervalMs,
 	})
 
 	const server = createServer((req, res) => {

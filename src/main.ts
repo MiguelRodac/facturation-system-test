@@ -50,6 +50,7 @@ if (apiPort === frontendPort) {
 		assignmentPath,
 		cobrixDbPath,
 		apiKey: env.COBRIX_API_KEY,
+		schedulerIntervalMs: env.SCHEDULER_INTERVAL_SECONDS * 1000,
 	})
 	unifiedApp.listen(apiPort, host)
 } else {
@@ -57,6 +58,7 @@ if (apiPort === frontendPort) {
 		cobrixDbPath,
 		simulatorUrl,
 		apiKey: env.COBRIX_API_KEY,
+		schedulerIntervalMs: env.SCHEDULER_INTERVAL_SECONDS * 1000,
 	})
 	await new Promise<void>(resolve => apiServer!.listen(apiPort, host, resolve))
 

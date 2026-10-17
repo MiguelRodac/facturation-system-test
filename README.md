@@ -78,11 +78,15 @@ pnpm start
 - `GET /api/v1/customers`: Directorio general de clientes con resumen de deuda y buscador (`?q=`).
 - `GET /api/v1/customers/:id`: Expediente 360° del cliente con perfil, contratos, facturas y línea de tiempo histórica.
 
+### Dashboard (BFF)
+- `GET /api/v1/dashboard`: Retorna en una sola petición agregada los KPIs principales (clientes, contratos, deuda, pagadas, última corrida), top deudores y logs recientes de sincronización.
+
 ### Sincronización y Cobranzas
 - `POST /api/v1/sync/import?simulate=true|false`: Ejecuta o simula la importación de cuotas desde el ISP.
 - `POST /api/v1/sync/reconcile?simulate=true|false`: Concilia pagos registrados en la taquilla del ISP.
 - `GET /api/v1/sync/runs`: Historial de corridas de sincronización.
 - `GET /api/v1/sync/runs/:id`: Detalle cuota por cuota de una corrida con auditoría y motivos de descarte.
+- `POST /api/v1/sync/reset`: Reinicio total de cartera en Cobrix (tablas `customer`, `contract`, `invoice`, `sync_run`) y restablecimiento del simulador del ISP (`/__sim/reiniciar`) a su estado cero original.
 
 ---
 

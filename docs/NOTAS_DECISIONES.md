@@ -187,6 +187,27 @@ Este documento registra de forma continua cada decisión de diseño, resolución
   6. *Punto Diferencial (§6 y §7):*
      Se documentó la propuesta de evolución técnica desde la sincronización batch diaria (polling a las 3:00 AM) hacia una arquitectura orientada a eventos en tiempo real mediante **Webhooks** (`POST /api/v1/webhooks/isp-payments`) o streaming de eventos (**Kafka / AWS SQS**), eliminando la cobranza tardía sobre clientes que pagaron minutos antes en taquilla.
 
+### DEC-015: Prevención de Loops en React SPA y Control de Estado Sucio (`isDirty`)
+- **Problema Detectado:** En la pantalla de Configuración (`ConfigPage.tsx`), la inclusión de `initialConfig` dentro del arreglo de dependencias de `useCallback` provocaba que la actualización del estado tras recibir los datos de la API recreara la función `loadConfig`, disparando infinitamente el efecto `useEffect` (2.104 peticiones HTTP registradas en DevTools).
+- **Solución Implementada:**
+  1. Se aisló la carga inicial en un único efecto de montaje con bandera de componente activo (`isMounted`).
+  2. Se erradicó la recarga pasiva agresiva en `window.focus` sobre formularios de configuración, evitando sobrescribir entradas mientras el usuario interactúa.
+  3. Se formalizó el cálculo de estado sucio (`isDirty = JSON.stringify(config) !== JSON.stringify(initialConfig)`) y validación de esquema en tiempo real (`isFormValid`), bloqueando el botón de guardado cuando no hay modificaciones pendientes o cuando los campos contienen errores de formato.
+
+### DEC-016: Modo Oscuro con Jerarquía de Especificidad en Tailwind CSS v4
+- **Contexto:** Al alternar al modo oscuro, tablas y contenedores con utilidades explícitas (`bg-white`, `divide-slate-100`) se mantenían en fondo blanco brillante, rompiendo la armonía visual y contraste del panel.
+- **Causa Raíz:** En Tailwind CSS v4 con `@import "tailwindcss"`, las reglas de capas base (`@layer base`) tienen menor especificidad que las clases de utilidad generadas en `@layer utilities`.
+- **Solución:**
+  1. Se incorporó `!important` en el mapeo de superficies de `src/web/client/src/index.css` (`.dark .bg-white { background-color: #0f172a !important; }`).
+  2. Se aplicaron clases directas con variantes oscuras (`dark:bg-slate-900`, `dark:border-slate-800`, `dark:divide-slate-800`, `dark:text-slate-100`) en `SyncPage.tsx`, `CustomersPage.tsx` y `CustomerDossierPage.tsx`, asegurando que tablas, modales y tarjetas de KPI mantengan legibilidad absoluta en ambos temas.
+
+### DEC-017: Reseteo Integral de Sandbox y Arquitectura Híbrida del Background Scheduler
+- **Reseteo Integral de Pruebas:**
+  - El endpoint `POST /api/v1/sync/reset` fue extendido mediante `ResetSyncDataUseCase` para no solo purgar las tablas locales de Cobrix (`customer`, `contract`, `invoice`, `sync_run`), sino además invocar el endpoint `POST /__sim/reiniciar` del simulador del ISP. Esto restablece la base de datos externa a su estado cero (27 contratos y cuotas base originales), garantizando un ciclo de pruebas completamente reproducible e idempotente sin reiniciar el proceso de Node.
+- **Background Scheduler Híbrido:**
+  - **Watchdog Configurable:** Se añadió la variable de entorno `SCHEDULER_INTERVAL_SECONDS` (con valor por defecto de 60s en `.env.example`, configurable a 300s o más en producción).
+  - **Event-Driven Rescheduling:** Se conectó un hook en `ConfigurationController`: cada vez que se actualizan los parámetros vía `PUT /api/v1/config`, se invoca de inmediato `scheduler.reschedule()`. Esto recalcula y sincroniza la hora programada al instante, combinando la inmediatez de una arquitectura orientada a eventos con la robustez del guardián periódico.
+
 ---
 
 ## 3. Catálogo de Casos Raros de la API del ISP y Resolución

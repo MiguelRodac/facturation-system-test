@@ -48,7 +48,12 @@ export class BackgroundScheduler {
 		}
 	}
 
-	private async check(): Promise<void> {
+	async reschedule(): Promise<void> {
+		console.log(`[SYNC ENGINE] 🔄 Parámetros actualizados: re-evaluando programación del scheduler...`)
+		await this.check()
+	}
+
+	async check(): Promise<void> {
 		try {
 			const config = await this.getConfig()
 

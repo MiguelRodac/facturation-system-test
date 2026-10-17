@@ -15,15 +15,18 @@ export class ConfigurationController {
 	private readonly getConfigurationUseCase: GetConfigurationUseCase
 	private readonly updateConfigurationUseCase: UpdateConfigurationUseCase
 	private readonly testConnectionUseCase: TestConnectionUseCase
+	private readonly onConfigUpdated?: () => void | Promise<void>
 
 	constructor(
 		getConfigurationUseCase: GetConfigurationUseCase,
 		updateConfigurationUseCase: UpdateConfigurationUseCase,
 		testConnectionUseCase: TestConnectionUseCase,
+		onConfigUpdated?: () => void | Promise<void>,
 	) {
 		this.getConfigurationUseCase = getConfigurationUseCase
 		this.updateConfigurationUseCase = updateConfigurationUseCase
 		this.testConnectionUseCase = testConnectionUseCase
+		this.onConfigUpdated = onConfigUpdated
 	}
 
 	get = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -41,6 +44,13 @@ export class ConfigurationController {
 			const body = (req.body || {}) as Record<string, unknown>
 			const patch = ConfigurationRequestMapper.toUpdateInput(body)
 			const updated = await this.updateConfigurationUseCase.execute(patch)
+			if (this.onConfigUpdated) {
+				try {
+					void this.onConfigUpdated()
+				} catch (err) {
+					console.warn('⚠️ Error notificando actualización de configuración:', err)
+				}
+			}
 			const dto = ConfigurationResponseMapper.toDto(updated)
 			res.status(200).json({ data: dto })
 		} catch (err) {

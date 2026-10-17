@@ -65,37 +65,28 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onConfigUpdated, notify 
     total_contracts?: number
   } | null>(null)
 
-  const loadConfig = useCallback(async (isManualRefresh = false) => {
-    try {
-      const data = await api.getConfig()
-      setConfig((prev) => {
-        // If user already made edits, don't discard them on passive window focus
-        if (!isManualRefresh && initialConfig && JSON.stringify(prev) !== JSON.stringify(initialConfig)) {
-          return prev
+  // Load config on component mount
+  useEffect(() => {
+    let isMounted = true
+    async function init() {
+      try {
+        setLoading(true)
+        const data = await api.getConfig()
+        if (isMounted) {
+          setConfig(data)
+          setInitialConfig(data)
         }
-        setInitialConfig(data)
-        return data
-      })
-      if (isManualRefresh) {
-        notify('Parámetros de configuración recargados', 'info')
+      } catch (err: unknown) {
+        if (isMounted) notify((err as Error).message, 'error')
+      } finally {
+        if (isMounted) setLoading(false)
       }
-    } catch (err: unknown) {
-      notify((err as Error).message, 'error')
-    } finally {
-      setLoading(false)
     }
-  }, [notify, initialConfig])
-
-  useEffect(() => {
-    loadConfig()
-  }, [loadConfig])
-
-  // Window focus real-time sync
-  useEffect(() => {
-    const onFocus = () => loadConfig(false)
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [loadConfig])
+    init()
+    return () => {
+      isMounted = false
+    }
+  }, [notify])
 
   const toggleStatus = (status: string) => {
     const current = config.importable_statuses || []

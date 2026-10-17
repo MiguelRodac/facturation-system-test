@@ -114,8 +114,22 @@ export class CobrixApiRouter {
 		const listCustomersUseCase = new ListCustomersUseCase(customerRepo, contractRepo, invoiceRepo, customerEnricher)
 		const getCustomerDossierUseCase = new GetCustomerDossierUseCase(customerRepo, contractRepo, invoiceRepo, customerEnricher)
 
+		const resetIspCallback = async (): Promise<boolean> => {
+			const configRow = db.queryOne<{ api_url: string }>('SELECT api_url FROM company_config WHERE id = 1')
+			const targetUrl = configRow?.api_url || options.billingApiUrl || 'http://127.0.0.1:4310'
+			try {
+				const res = await fetch(`${targetUrl.replace(/\/+$/, '')}/__sim/reiniciar`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+				})
+				return res.ok
+			} catch {
+				return false
+			}
+		}
+
 		const importUseCase = new ImportInstallmentsUseCase(importBillingAdapter, importRepo, configRepo)
-		const resetSyncDataUseCase = new ResetSyncDataUseCase(importRepo)
+		const resetSyncDataUseCase = new ResetSyncDataUseCase(importRepo, resetIspCallback)
 		const reconcileUseCase = new ReconcilePaymentsUseCase(paymentBillingAdapter, paymentRepo)
 		const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(dashboardRepo)
 
@@ -126,7 +140,12 @@ export class CobrixApiRouter {
 		const getRunDetailUseCase = new GetRunDetailUseCase(runsRepo)
 
 		// Controllers
-		const configController = new ConfigurationController(getConfigUseCase, updateConfigUseCase, testConnUseCase)
+		const configController = new ConfigurationController(
+			getConfigUseCase,
+			updateConfigUseCase,
+			testConnUseCase,
+			() => this.scheduler.reschedule(),
+		)
 		const customerController = new CustomerController(listCustomersUseCase, getCustomerDossierUseCase)
 		const importController = new ImportController(importUseCase, resetSyncDataUseCase)
 		const paymentController = new PaymentController(reconcileUseCase)
