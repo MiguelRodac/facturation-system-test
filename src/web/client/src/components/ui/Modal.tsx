@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { X } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -26,20 +27,29 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3 className="card-title">{title}</h3>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-xl border border-slate-200/80 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="font-semibold text-slate-900 text-base tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="btn btn-secondary"
-            style={{ padding: '0.25rem 0.6rem', border: 'none', fontSize: '1.25rem' }}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
-            &times;
+            <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-footer">{footer}</div>}
+        <div className="p-6 text-sm text-slate-600">{children}</div>
+        {footer && (
+          <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2.5">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

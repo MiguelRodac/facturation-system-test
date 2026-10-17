@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 const envPath = resolve(process.cwd(), '.env')
 if (!existsSync(envPath)) {
@@ -14,7 +15,7 @@ if (!existsSync(envPath)) {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   root: 'src/web/client',
   envDir: process.cwd(),
   base: '/',

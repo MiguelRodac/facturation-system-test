@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Search, X, Users, ArrowRight, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { api } from '../api/client'
@@ -7,6 +8,14 @@ import type { CustomerListItem } from '../api/types'
 interface CustomersPageProps {
   onSelectCustomer: (id: string) => void
   notify: (text: string, type: 'success' | 'error' | 'info') => void
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.slice(0, 2).toUpperCase()
 }
 
 export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, notify }) => {
@@ -35,135 +44,166 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({ onSelectCustomer, 
   }, [query, notify])
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Directorio de Clientes</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Consulta de clientes sincronizados, contratos y estado de facturación.
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Directorio de Clientes
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Cartera de clientes sincronizados desde el ISP, contratos vigentes y saldos por cobrar.
           </p>
         </div>
       </div>
 
       <Card>
         {/* Search Bar */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              className="form-input"
-              placeholder="Buscar por nombre o identificación (ej. V12345678, Comercial, Soto)..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              style={{ paddingLeft: '2.5rem' }}
+              placeholder="Buscar por nombre o identificación (ej. V10145063, Ana, J401234567)..."
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono tabular-nums"
             />
-            <span
-              style={{
-                position: 'absolute',
-                left: '0.85rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-muted)',
-              }}
-            >
-              🔍
-            </span>
             {query && (
               <button
                 onClick={() => setQuery('')}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--text-muted)',
-                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded cursor-pointer"
               >
-                &times;
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
+        {/* Content */}
         {loading ? (
-          <p style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
-            Cargando clientes...
-          </p>
+          <div className="flex items-center justify-center py-16 text-slate-400">
+            <RefreshCw className="w-5 h-5 animate-spin mr-2 text-indigo-600" />
+            <span className="text-sm font-medium">Buscando clientes...</span>
+          </div>
         ) : customers.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-            <p style={{ fontSize: '1.1rem', fontWeight: 600 }}>No se encontraron clientes</p>
-            <p style={{ fontSize: '0.875rem' }}>Prueba con otro término de búsqueda o ejecuta una sincronización.</p>
+          <div className="text-center py-16">
+            <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-slate-700">No se encontraron clientes</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Prueba con otro término de búsqueda o ejecuta una sincronización.
+            </p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr>
-                  <th>Identificación</th>
-                  <th>Nombre del Cliente</th>
-                  <th>Tipo</th>
-                  <th>Contratos</th>
-                  <th>Facturas Abiertas</th>
-                  <th>Facturas Pagadas</th>
-                  <th>Deuda Total</th>
-                  <th>Vencimiento Antiguo</th>
-                  <th>Acción</th>
+                <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="pb-3 font-medium">Cliente</th>
+                  <th className="pb-3 font-medium">Documento</th>
+                  <th className="pb-3 font-medium">Tipo</th>
+                  <th className="pb-3 font-medium text-center">Contratos</th>
+                  <th className="pb-3 font-medium text-center">Facturas</th>
+                  <th className="pb-3 font-medium text-right">Deuda Total</th>
+                  <th className="pb-3 font-medium">Vencimiento Más Antiguo</th>
+                  <th className="pb-3 font-medium text-right">Acción</th>
                 </tr>
               </thead>
-              <tbody>
-                {customers.map((c) => (
-                  <tr
-                    key={c.id}
-                    onClick={() => onSelectCustomer(c.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td className="mono" style={{ fontWeight: 600 }}>
-                      {c.id}
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{c.name}</td>
-                    <td>
-                      <Badge variant={c.person_type === 'LEGAL' ? 'info' : 'neutral'}>
-                        {c.person_type === 'LEGAL' ? 'Jurídica' : 'Natural'}
-                      </Badge>
-                    </td>
-                    <td>{c.contracts_count}</td>
-                    <td>
-                      {c.open_invoices_count > 0 ? (
-                        <Badge variant="open">{c.open_invoices_count}</Badge>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>0</span>
-                      )}
-                    </td>
-                    <td>
-                      {c.paid_invoices_count > 0 ? (
-                        <Badge variant="paid">{c.paid_invoices_count}</Badge>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>0</span>
-                      )}
-                    </td>
-                    <td className="mono" style={{ fontWeight: 700, color: c.total_debt > 0 ? '#b45309' : '#047857' }}>
-                      ${c.total_debt.toFixed(2)}
-                    </td>
-                    <td className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {c.oldest_due_date || '—'}
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-secondary"
-                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onSelectCustomer(c.id)
-                        }}
-                      >
-                        Ver Expediente &rarr;
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-slate-100">
+                {customers.map((c) => {
+                  const hasDebt = c.total_debt > 0
+                  return (
+                    <tr
+                      key={c.id}
+                      onClick={() => onSelectCustomer(c.id)}
+                      className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                    >
+                      {/* Cliente con Iniciales */}
+                      <td className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                            {getInitials(c.name)}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors block">
+                              {c.name}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Documento */}
+                      <td className="py-3 font-mono tabular-nums text-xs text-slate-600 font-medium">
+                        {c.id}
+                      </td>
+
+                      {/* Tipo */}
+                      <td className="py-3">
+                        <Badge variant={c.person_type === 'LEGAL' ? 'info' : 'neutral'}>
+                          {c.person_type === 'LEGAL' ? 'Jurídica' : 'Natural'}
+                        </Badge>
+                      </td>
+
+                      {/* Contratos */}
+                      <td className="py-3 text-center font-mono tabular-nums text-slate-700">
+                        {c.contracts_count}
+                      </td>
+
+                      {/* Facturas */}
+                      <td className="py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5 font-mono tabular-nums text-xs">
+                          {c.open_invoices_count > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/60 font-semibold">
+                              {c.open_invoices_count} ab.
+                            </span>
+                          )}
+                          {c.paid_invoices_count > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium">
+                              {c.paid_invoices_count} pag.
+                            </span>
+                          )}
+                          {c.open_invoices_count === 0 && c.paid_invoices_count === 0 && (
+                            <span className="text-slate-300">0</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Deuda Total */}
+                      <td className="py-3 text-right">
+                        {hasDebt ? (
+                          <span className="font-bold text-slate-900 font-mono tabular-nums">
+                            USD {c.total_debt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono tabular-nums">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Al día</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Vencimiento Más Antiguo */}
+                      <td className="py-3 text-xs">
+                        {hasDebt && c.oldest_due_date ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono tabular-nums bg-amber-50 text-amber-700 border border-amber-200/60 font-medium">
+                            <AlertCircle className="w-3 h-3 text-amber-600" />
+                            <span>{c.oldest_due_date}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* Acción */}
+                      <td className="py-3 text-right">
+                        <span className="text-xs font-semibold text-slate-400 group-hover:text-indigo-600 inline-flex items-center gap-1 transition-colors">
+                          <span>Ver</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

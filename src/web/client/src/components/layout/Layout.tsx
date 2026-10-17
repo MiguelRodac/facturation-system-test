@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navbar, type PageId } from './Navbar'
+import { Sidebar, type PageId } from './Sidebar'
 
 interface LayoutProps {
   currentPage: PageId
@@ -15,21 +15,20 @@ export const Layout: React.FC<LayoutProps> = ({
   children,
 }) => {
   return (
-    <div className="app-container">
-      <Navbar currentPage={currentPage} onNavigate={onNavigate} companyName={companyName} />
-      <main className="main-content">{children}</main>
-      <footer
-        style={{
-          borderTop: '1px solid var(--border-light)',
-          padding: '1.5rem',
-          textAlign: 'center',
-          fontSize: '0.8125rem',
-          color: 'var(--text-muted)',
-          background: '#ffffff',
-        }}
-      >
-        Cobrix Telecom Platform &bull; Arquitectura Hexagonal Desacoplada &bull; API v1 &bull; RFC 9457 Problem Details
-      </footer>
+    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased flex">
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={onNavigate}
+        companyName={companyName}
+      />
+      <div className="flex-1 flex flex-col min-w-0 pl-64">
+        <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
+          {children}
+        </main>
+        <footer className="border-t border-slate-200/80 py-4 px-8 text-center text-xs text-slate-400 bg-white/40">
+          Cobrix Telecom Platform &bull; Arquitectura Hexagonal &bull; REST API v1 &bull; RFC 9457 Problem Details
+        </footer>
+      </div>
     </div>
   )
 }
