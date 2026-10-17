@@ -146,6 +146,17 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.ok(problem.trace_id)
 	})
 
+	it('GET /api/v1/customersol returns 404 RFC 9457 for unmapped API route', async () => {
+		const res = await fetch(`${apiUrl}/api/v1/customersol`)
+		assert.equal(res.status, 404)
+		assert.equal(res.headers.get('content-type'), 'application/problem+json')
+		const problem = await res.json() as { type: string; title: string; status: number; trace_id: string; instance: string }
+		assert.equal(problem.status, 404)
+		assert.equal(problem.title, 'Resource Not Found')
+		assert.equal(problem.instance, '/api/v1/customersol')
+		assert.ok(problem.trace_id)
+	})
+
 	it('POST /api/v1/sync/reconcile reconciles payments', async () => {
 		// Register payments in ISP cash desk simulator (§5)
 		await fetch(`${billingApiUrl}/__sim/pagar`, {

@@ -13,6 +13,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { SqliteConfigurationRepository } from '../cobrix/features/configuration/index.ts'
 import { SqliteDatabaseClient } from '../cobrix/shared/infrastructure/database/database.client.ts'
 import { createCobrixDatabase } from '../cobrix/shared/infrastructure/database/database.ts'
 import { BackgroundScheduler, CobrixApiRouter } from '../cobrix/shared/index.ts'
@@ -50,8 +51,17 @@ export function createApp(deps: AppDeps): Server {
 			billingApiUrl: deps.simulatorUrl,
 		})
 
+		const configRepo = new SqliteConfigurationRepository(dbClient)
+
 		scheduler = new BackgroundScheduler(dbClient, {
 			intervalMs: 60_000,
+			getConfig: async () => {
+				const cfg = await configRepo.get()
+				return {
+					autoRunEnabled: cfg.autoRunEnabled,
+					autoRunHour: cfg.autoRunHour ?? null,
+				}
+			},
 			onTrigger: async () => {
 				console.log('[SYNC ENGINE] 🚀 Ejecutando corrida automática programada...')
 			},
@@ -141,6 +151,10 @@ export function createApp(deps: AppDeps): Server {
 	server.close = ((callback?: (err?: Error) => void) => {
 		if (scheduler) {
 			scheduler.stop()
+		}
+		if (dbClient) {
+			dbClient.close()
+			dbClient = null
 		}
 		return originalClose(callback)
 	}) as typeof server.close

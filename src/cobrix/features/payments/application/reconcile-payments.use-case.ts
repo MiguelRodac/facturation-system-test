@@ -40,38 +40,12 @@ export class ReconcilePaymentsUseCase {
 		try {
 			for (const contractId of contractIds) {
 				totalContractsChecked++
-				const openInvoices = await this.repo.getOpenInvoicesByContract(contractId)
-				if (openInvoices.length === 0) continue
-
-				const paymentBookRows = await this.billingApi.fetchPaymentBook(contractId)
-
-				for (const invoice of openInvoices) {
-					totalInvoicesEvaluated++
-					const evaluation = PaymentEvaluatorService.evaluate(invoice, paymentBookRows)
-					items.push(evaluation)
-
-					if (evaluation.result === 'PAID') {
-						paidInvoicesCount++
-						paidAmountCents += Math.round(evaluation.previousBalance * 100)
-
-						if (!isSimulation) {
-							await this.repo.markInvoicePaid(
-								invoice.id,
-								evaluation.paidByInvoiceNumber ?? '',
-								evaluation.paidAt ?? startedAt,
-							)
-						}
-					} else if (evaluation.result === 'PARTIAL_PAYMENT') {
-						partialPaymentsCount++
-
-						if (!isSimulation) {
-							await this.repo.updateInvoicePartialPayment(
-								invoice.id,
-								evaluation.newBalance,
-							)
-						}
-					}
-				}
+				const result = await this.reconcileContractInvoices(contractId, isSimulation, startedAt)
+				totalInvoicesEvaluated += result.invoicesEvaluated
+				paidInvoicesCount += result.paidCount
+				paidAmountCents += result.paidAmountCents
+				partialPaymentsCount += result.partialPaymentsCount
+				items.push(...result.items)
 			}
 
 			const finishedAt = new Date().toISOString()
@@ -118,6 +92,64 @@ export class ReconcilePaymentsUseCase {
 			})
 
 			throw error
+		}
+	}
+
+	private async reconcileContractInvoices(
+		contractId: number,
+		isSimulation: boolean,
+		startedAt: string
+	): Promise<{
+		invoicesEvaluated: number
+		paidCount: number
+		paidAmountCents: number
+		partialPaymentsCount: number
+		items: PaymentEvaluationItem[]
+	}> {
+		const openInvoices = await this.repo.getOpenInvoicesByContract(contractId)
+		if (openInvoices.length === 0) {
+			return { invoicesEvaluated: 0, paidCount: 0, paidAmountCents: 0, partialPaymentsCount: 0, items: [] }
+		}
+
+		const paymentBookRows = await this.billingApi.fetchPaymentBook(contractId)
+		const items: PaymentEvaluationItem[] = []
+		let paidCount = 0
+		let paidAmountCents = 0
+		let partialPaymentsCount = 0
+
+		for (const invoice of openInvoices) {
+			const evaluation = PaymentEvaluatorService.evaluate(invoice, paymentBookRows)
+			items.push(evaluation)
+
+			if (evaluation.result === 'PAID') {
+				paidCount++
+				paidAmountCents += Math.round(evaluation.previousBalance * 100)
+
+				if (!isSimulation) {
+					await this.repo.markInvoicePaid(
+						invoice.id,
+						evaluation.paidByInvoiceNumber ?? '',
+						evaluation.paidAt ?? startedAt,
+					)
+				}
+			} else if (evaluation.result === 'PARTIAL_PAYMENT') {
+				partialPaymentsCount++
+
+				if (!isSimulation) {
+					await this.repo.updateInvoicePartialPayment(
+						invoice.id,
+						evaluation.newBalance,
+					)
+				}
+			}
+		}
+
+		return {
+			invoicesEvaluated: openInvoices.length,
+			paidCount,
+			paidAmountCents,
+			partialPaymentsCount,
+			items,
 		}
 	}
 }

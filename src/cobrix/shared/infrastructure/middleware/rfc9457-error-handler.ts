@@ -17,7 +17,7 @@ export function handleRFC9457Error(
 	res: ServerResponse
 ): void {
 	const traceId = (req.headers['x-trace-id'] as string) || randomUUID()
-	const instance = req.url || '/'
+	const instance = (req as Request).originalUrl || req.url || '/'
 
 	res.setHeader('Content-Type', PROBLEM_CONTENT_TYPE)
 	res.setHeader('X-Trace-Id', traceId)

@@ -46,6 +46,7 @@ import {
 } from '../../../features/runs/index.ts'
 import { BillingApiClient } from '../billing-api.client.ts'
 import type { DatabaseClient } from '../database/database.client.ts'
+import { NotFoundError } from '../../domain/errors/app.errors.ts'
 import { rfc9457ErrorMiddleware } from '../middleware/rfc9457-error-handler.ts'
 import { OPENAPI_SPEC, serveSwaggerUI } from '../openapi/openapi.ts'
 
@@ -129,6 +130,11 @@ export class CobrixApiRouter {
 		this.app.use('/api/v1/sync', createImportRouter(importController))
 		this.app.use('/api/v1/sync', createPaymentRouter(paymentController))
 		this.app.use('/api/v1/sync', createRunsRouter(runsController))
+
+		// Unmapped API Route Catch-All (RFC 9457 404)
+		this.app.use((req, _res, next) => {
+			next(new NotFoundError(`Resource not found for ${req.method} ${req.originalUrl || req.url}`))
+		})
 
 		// RFC 9457 Global Error Handler
 		this.app.use(rfc9457ErrorMiddleware)

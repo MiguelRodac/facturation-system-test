@@ -7,22 +7,38 @@
 
 import type { DatabaseClient } from '../database/database.client.ts'
 
+export interface ScheduleConfig {
+	autoRunEnabled: boolean
+	autoRunHour: string | null
+}
+
 export interface SchedulerOptions {
 	intervalMs?: number
 	onTrigger?: () => Promise<void>
+	getConfig?: () => Promise<ScheduleConfig | null>
 }
 
 export class BackgroundScheduler {
-	private readonly db: DatabaseClient
+	private readonly db?: DatabaseClient
 	private timer: NodeJS.Timeout | null = null
 	private readonly intervalMs: number
 	private readonly onTrigger?: () => Promise<void>
+	private readonly getConfig?: () => Promise<ScheduleConfig | null>
 	private lastRunDate: string | null = null
 
-	constructor(db: DatabaseClient, options: SchedulerOptions = {}) {
-		this.db = db
-		this.intervalMs = options.intervalMs ?? 60_000 // 1 minute default
-		this.onTrigger = options.onTrigger
+	constructor(dbOrOptions?: DatabaseClient | SchedulerOptions, maybeOptions?: SchedulerOptions) {
+		if (dbOrOptions && typeof (dbOrOptions as DatabaseClient).queryOne === 'function') {
+			this.db = dbOrOptions as DatabaseClient
+			const options = maybeOptions ?? {}
+			this.intervalMs = options.intervalMs ?? 60_000
+			this.onTrigger = options.onTrigger
+			this.getConfig = options.getConfig
+		} else {
+			const options = (dbOrOptions as SchedulerOptions) ?? {}
+			this.intervalMs = options.intervalMs ?? 60_000
+			this.onTrigger = options.onTrigger
+			this.getConfig = options.getConfig
+		}
 	}
 
 	start(): void {
@@ -46,12 +62,24 @@ export class BackgroundScheduler {
 
 	private async check(): Promise<void> {
 		try {
-			const config = this.db.queryOne<{
-				auto_run_enabled: number
-				auto_run_hour: string | null
-			}>('SELECT auto_run_enabled, auto_run_hour FROM company_config WHERE id = 1')
+			let config: ScheduleConfig | null = null
 
-			if (!config || !config.auto_run_enabled || !config.auto_run_hour) {
+			if (this.getConfig) {
+				config = await this.getConfig()
+			} else if (this.db) {
+				const row = this.db.queryOne<{
+					auto_run_enabled: number
+					auto_run_hour: string | null
+				}>('SELECT auto_run_enabled, auto_run_hour FROM company_config WHERE id = 1')
+				if (row) {
+					config = {
+						autoRunEnabled: Boolean(row.auto_run_enabled),
+						autoRunHour: row.auto_run_hour,
+					}
+				}
+			}
+
+			if (!config || !config.autoRunEnabled || !config.autoRunHour) {
 				return
 			}
 
@@ -59,9 +87,9 @@ export class BackgroundScheduler {
 			const currentHourMinute = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 			const todayDate = now.toISOString().split('T')[0] ?? ''
 
-			if (config.auto_run_hour === currentHourMinute && this.lastRunDate !== todayDate) {
+			if (config.autoRunHour === currentHourMinute && this.lastRunDate !== todayDate) {
 				this.lastRunDate = todayDate
-				console.log(`[SYNC ENGINE] 🚀 [${currentHourMinute}] Ejecutando corrida programada diaria (${config.auto_run_hour})...`)
+				console.log(`[SYNC ENGINE] 🚀 [${currentHourMinute}] Ejecutando corrida programada diaria (${config.autoRunHour})...`)
 
 				if (this.onTrigger) {
 					try {
