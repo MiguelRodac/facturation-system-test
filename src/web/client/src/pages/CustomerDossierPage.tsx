@@ -108,7 +108,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
       <div>
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a Clientes
@@ -119,12 +119,12 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
       <Card>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
               {initials}
             </div>
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   {profile.name}
                 </h1>
                 <Badge variant={profile.person_type === 'LEGAL' ? 'info' : 'neutral'}>
@@ -132,10 +132,10 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-600">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-600 dark:text-slate-400">
                 <span className="flex items-center gap-1.5">
-                  <span className="text-slate-400 font-medium">Cédula / RIF:</span>
-                  <strong className="font-mono tabular-nums text-slate-800">{profile.id}</strong>
+                  <span className="text-slate-400 dark:text-slate-500 font-medium">Cédula / RIF:</span>
+                  <strong className="font-mono tabular-nums text-slate-800 dark:text-slate-200">{profile.id}</strong>
                 </span>
                 {profile.phone && (
                   <span className="flex items-center gap-1.5">
@@ -152,7 +152,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
               </div>
 
               {profile.address && (
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 pt-0.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 pt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="truncate">{profile.address}</span>
                 </div>
@@ -160,12 +160,12 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-6 self-start lg:self-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100 text-right">
+          <div className="flex items-center gap-6 self-start lg:self-auto border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100 dark:border-slate-800 text-right">
             <div>
-              <span className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+              <span className="block text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
                 Origen
               </span>
-              <div className="text-sm font-semibold text-slate-800">
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 {profile.origin || 'ISP Billing API'}
               </div>
               {profile.created_at && (
@@ -320,10 +320,10 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
               No hay facturas para el filtro seleccionado.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-100">
-              <table className="w-full text-left text-sm divide-y divide-slate-100">
-                <thead className="bg-slate-50/75">
-                  <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
+              <table className="w-full text-left text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                <thead className="bg-slate-50/75 dark:bg-slate-800/80">
+                  <tr className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <th className="py-2.5 px-4 whitespace-nowrap">Cuota ID</th>
                     <th className="py-2.5 px-4 whitespace-nowrap">Período</th>
                     <th className="py-2.5 px-4 whitespace-nowrap">Vencimiento</th>
@@ -334,16 +334,16 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                     <th className="py-2.5 px-4 whitespace-nowrap">Recibo / Pago</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs text-slate-600 bg-white">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900">
                   {filteredInvoices.map((inv) => (
                     <tr
                       key={inv.id || inv.external_installment_id}
-                      className="hover:bg-slate-50/80 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
-                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-slate-800">
+                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">
                         {inv.external_installment_id}
                       </td>
-                      <td className="py-3 px-4 font-medium text-slate-900">
+                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">
                         {inv.period}
                       </td>
                       <td className="py-3 px-4 font-mono tabular-nums text-slate-500 dark:text-slate-400">
@@ -352,12 +352,12 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                       <td className="py-3 px-4 font-mono tabular-nums text-slate-500 dark:text-slate-400">
                         {formatCaracasDate(inv.cutoff_date)}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums text-slate-700">
+                      <td className="py-3 px-4 font-mono tabular-nums text-slate-700 dark:text-slate-300">
                         USD {inv.total_amount.toFixed(2)}
                       </td>
                       <td
                         className={`py-3 px-4 font-mono tabular-nums font-semibold ${
-                          inv.balance > 0 ? 'text-amber-600' : 'text-emerald-600'
+                          inv.balance > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'
                         }`}
                       >
                         USD {inv.balance.toFixed(2)}
@@ -375,17 +375,17 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                       <td className="py-3 px-4">
                         {inv.paid_by_invoice_number ? (
                           <div>
-                            <span className="font-mono tabular-nums font-semibold text-slate-800">
+                            <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">
                               #{inv.paid_by_invoice_number}
                             </span>
                             {inv.paid_at && (
-                              <div className="font-mono tabular-nums text-[11px] text-slate-400">
+                              <div className="font-mono tabular-nums text-[11px] text-slate-400 dark:text-slate-500">
                                 {formatCaracasDateTime(inv.paid_at)}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400">Pendiente</span>
+                          <span className="text-slate-400 dark:text-slate-500">Pendiente</span>
                         )}
                       </td>
                     </tr>
@@ -400,10 +400,10 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
       {/* Tab 2: Contratos */}
       {activeTab === 'contratos' && (
         <Card title="Contratos en el administrador">
-          <div className="overflow-x-auto rounded-lg border border-slate-100">
-            <table className="w-full text-left text-sm divide-y divide-slate-100">
-              <thead className="bg-slate-50/75">
-                <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
+            <table className="w-full text-left text-sm divide-y divide-slate-100 dark:divide-slate-800">
+              <thead className="bg-slate-50/75 dark:bg-slate-800/80">
+                <tr className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <th className="py-2.5 px-4 whitespace-nowrap">ID Contrato</th>
                   <th className="py-2.5 px-4 whitespace-nowrap">Código</th>
                   <th className="py-2.5 px-4 whitespace-nowrap">Plan Contratado</th>
@@ -412,7 +412,7 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                   <th className="py-2.5 px-4 whitespace-nowrap">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs text-slate-600 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900">
                 {contracts.map((c) => {
                   const isActivo = c.status === 'ACTIVO'
                   const isCortado = c.status === 'CORTADO'
@@ -420,26 +420,26 @@ export const CustomerDossierPage: React.FC<CustomerDossierPageProps> = ({
                     ? 'border-l-4 border-l-emerald-500'
                     : isCortado
                     ? 'border-l-4 border-l-rose-500'
-                    : 'border-l-4 border-l-slate-300'
+                    : 'border-l-4 border-l-slate-300 dark:border-l-slate-700'
 
                   return (
                     <tr
                       key={c.id}
-                      className={`hover:bg-slate-50/80 transition-colors ${indicatorClass}`}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${indicatorClass}`}
                     >
-                      <td className={`py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 ${indicatorClass}`}>
+                      <td className={`py-3 px-4 font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200 ${indicatorClass}`}>
                         {c.id}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-emerald-700">
+                      <td className="py-3 px-4 font-mono tabular-nums font-semibold text-emerald-700 dark:text-emerald-400">
                         {c.code}
                       </td>
-                      <td className="py-3 px-4 font-semibold text-slate-900">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
                         {c.plan_name}
                       </td>
-                      <td className="py-3 px-4 font-mono tabular-nums text-slate-700">
+                      <td className="py-3 px-4 font-mono tabular-nums text-slate-700 dark:text-slate-300">
                         USD {c.plan_price.toFixed(2)}
                       </td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
                         {c.branch_name || 'Principal'}
                       </td>
                       <td className="py-3 px-4">
