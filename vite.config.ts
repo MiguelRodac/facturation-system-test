@@ -23,10 +23,10 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 5173,
+    port: Number(process.env.FRONTEND_PORT || 3000),
     proxy: {
       '/api': {
-        target: 'http://localhost:4300',
+        target: `http://localhost:${process.env.API_PORT || 4300}`,
         changeOrigin: true,
       },
     },

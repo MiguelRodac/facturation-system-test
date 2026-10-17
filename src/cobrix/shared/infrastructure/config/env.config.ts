@@ -12,8 +12,9 @@ const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..
 
 const envSchema = z.object({
 	NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-	PORT: z.coerce.number().default(4300),
 	HOST: z.string().default('127.0.0.1'),
+	API_PORT: z.coerce.number().default(4300),
+	FRONTEND_PORT: z.coerce.number().default(3000),
 	BILLING_API_PORT: z.coerce.number().default(4310),
 	BILLING_API_DB: z.string().default('data/billing-api.sqlite'),
 	COBRIX_DB_PATH: z.string().default('data/cobrix.sqlite'),
@@ -45,10 +46,12 @@ export function loadAndValidateEnv(options: { required?: boolean } = {}): AppEnv
 		}
 	}
 
+	const rawApiPort = process.env.API_PORT ?? process.env.PORT
 	const parseResult = envSchema.safeParse({
 		NODE_ENV: process.env.NODE_ENV,
-		PORT: process.env.PORT,
 		HOST: process.env.HOST,
+		API_PORT: rawApiPort,
+		FRONTEND_PORT: process.env.FRONTEND_PORT,
 		BILLING_API_PORT: process.env.BILLING_API_PORT,
 		BILLING_API_DB: process.env.BILLING_API_DB,
 		COBRIX_DB_PATH: process.env.COBRIX_DB_PATH,
