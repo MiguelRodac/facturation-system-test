@@ -63,7 +63,16 @@ export function createApp(deps: AppDeps): Server {
 				}
 			},
 			onTrigger: async () => {
-				console.log('[SYNC ENGINE] 🚀 Ejecutando corrida automática programada...')
+				console.log('[SYNC ENGINE] 🚀 Iniciando corrida automática diaria...')
+				try {
+					const importRes = await apiRouter!.importUseCase.execute({ isSimulation: false })
+					console.log(`[SYNC ENGINE] 📥 Importación completada: ${importRes.importedInvoicesCount} facturas nuevas de ${importRes.totalContractsChecked} contratos evaluados.`)
+
+					const reconcileRes = await apiRouter!.reconcileUseCase.execute({ isSimulation: false })
+					console.log(`[SYNC ENGINE] 💳 Conciliación completada: ${reconcileRes.paidInvoicesCount} facturas pagadas, ${reconcileRes.partialPaymentsCount} pagos parciales.`)
+				} catch (err) {
+					console.error('[SYNC ENGINE] ❌ Error en ejecución de corrida programada:', err)
+				}
 			},
 		})
 		scheduler.start()

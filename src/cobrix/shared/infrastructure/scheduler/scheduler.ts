@@ -57,8 +57,15 @@ export class BackgroundScheduler {
 			}
 
 			const now = new Date()
-			const currentHourMinute = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-			const todayDate = now.toISOString().split('T')[0] ?? ''
+			const currentHourMinute = new Intl.DateTimeFormat('en-GB', {
+				timeZone: 'America/Caracas',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false,
+			}).format(now)
+			const todayDate = new Intl.DateTimeFormat('en-CA', {
+				timeZone: 'America/Caracas',
+			}).format(now)
 
 			if (config.autoRunHour === currentHourMinute && this.lastRunDate !== todayDate) {
 				this.lastRunDate = todayDate

@@ -57,6 +57,8 @@ export interface CobrixApiRouterOptions {
 
 export class CobrixApiRouter {
 	readonly app: Express
+	readonly importUseCase: ImportInstallmentsUseCase
+	readonly reconcileUseCase: ReconcilePaymentsUseCase
 
 	constructor(options: CobrixApiRouterOptions) {
 		const { db } = options
@@ -101,6 +103,9 @@ export class CobrixApiRouter {
 
 		const importUseCase = new ImportInstallmentsUseCase(importBillingAdapter, importRepo, configRepo)
 		const reconcileUseCase = new ReconcilePaymentsUseCase(paymentBillingAdapter, paymentRepo)
+
+		this.importUseCase = importUseCase
+		this.reconcileUseCase = reconcileUseCase
 
 		const getRecentRunsUseCase = new GetRecentRunsUseCase(runsRepo)
 		const getRunDetailUseCase = new GetRunDetailUseCase(runsRepo)
