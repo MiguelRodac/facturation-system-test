@@ -13,7 +13,7 @@ import {
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { api } from '../api/client'
-import type { CustomerListItem, SyncRun, CompanyConfig } from '../api/types'
+import type { DashboardSummary } from '../api/types'
 import type { PageId } from '../components/layout/Navbar'
 
 interface DashboardPageProps {
@@ -22,28 +22,49 @@ interface DashboardPageProps {
   notify: (text: string, type: 'success' | 'error' | 'info') => void
 }
 
+function parseSummaryBadges(summary: string): string[] {
+  if (!summary) return []
+  if (summary.trim().startsWith('{')) {
+    try {
+      const data = JSON.parse(summary)
+      const parts: string[] = []
+      if (data.isSimulation) parts.push('Simulación')
+      if (data.totalContractsChecked !== undefined) parts.push(`Contratos: ${data.totalContractsChecked}`)
+      if (data.totalInstallmentsChecked !== undefined) parts.push(`Cuotas: ${data.totalInstallmentsChecked}`)
+      if (data.totalInvoicesEvaluated !== undefined) parts.push(`Facturas: ${data.totalInvoicesEvaluated}`)
+      if (data.importedInvoicesCount !== undefined) {
+        const amt = data.importedAmount !== undefined ? ` ($${Number(data.importedAmount).toFixed(2)})` : ''
+        parts.push(`Importadas: ${data.importedInvoicesCount}${amt}`)
+      }
+      if (data.paidInvoicesCount !== undefined) {
+        const amt = data.paidAmount !== undefined ? ` ($${Number(data.paidAmount).toFixed(2)})` : ''
+        parts.push(`Pagadas: ${data.paidInvoicesCount}${amt}`)
+      }
+      if (data.partialPaymentsCount) parts.push(`Parciales: ${data.partialPaymentsCount}`)
+      if (data.importedCustomersCount) parts.push(`Clientes: ${data.importedCustomersCount}`)
+      if (data.error) parts.push(`Error: ${data.error}`)
+      return parts.length > 0 ? parts : [summary]
+    } catch {
+      // fallback to raw
+    }
+  }
+  return summary.split('·').map((p) => p.trim()).filter(Boolean)
+}
+
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigate,
   onSelectCustomer,
   notify,
 }) => {
-  const [customers, setCustomers] = useState<CustomerListItem[]>([])
-  const [runs, setRuns] = useState<SyncRun[]>([])
-  const [config, setConfig] = useState<CompanyConfig | null>(null)
+  const [data, setData] = useState<DashboardSummary | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true)
-        const [custList, runList, cfg] = await Promise.all([
-          api.getCustomers(),
-          api.getRuns(),
-          api.getConfig().catch(() => null),
-        ])
-        setCustomers(custList)
-        setRuns(runList)
-        if (cfg) setConfig(cfg)
+        const dashboard = await api.getDashboard()
+        setData(dashboard)
       } catch (err: unknown) {
         notify((err as Error).message, 'error')
       } finally {
@@ -53,24 +74,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     loadData()
   }, [notify])
 
-  const totalDebt = customers.reduce((acc, c) => acc + c.total_debt, 0)
-  const totalOpenInvoices = customers.reduce((acc, c) => acc + c.open_invoices_count, 0)
-  const totalPaidInvoices = customers.reduce((acc, c) => acc + c.paid_invoices_count, 0)
-  const totalContracts = customers.reduce((acc, c) => acc + c.contracts_count, 0)
-  const topDebtors = [...customers].sort((a, b) => b.total_debt - a.total_debt).slice(0, 5)
-  const recentRuns = runs.slice(0, 5)
-  const lastRun = runs.length > 0 ? runs[0] : null
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-400">
         <div className="flex items-center gap-3">
-          <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" />
+          <RefreshCw className="w-5 h-5 animate-spin text-emerald-600" />
           <span className="text-sm font-medium">Cargando panel operacional...</span>
         </div>
       </div>
     )
   }
+
+  const kpis = data?.kpis
+  const provider = data?.provider
+  const topDebtors = data?.top_debtors ?? []
+  const recentRuns = data?.recent_runs ?? []
+  const lastRun = kpis?.last_run ?? null
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -105,7 +124,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-slate-900 font-mono tabular-nums">
-              {customers.length}
+              {kpis?.total_customers ?? 0}
             </span>
             <span className="block text-[11px] text-slate-400 mt-1">
               Cartera registrada
@@ -121,7 +140,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-slate-900 font-mono tabular-nums">
-              {totalContracts}
+              {kpis?.total_contracts ?? 0}
             </span>
             <span className="block text-[11px] text-slate-400 mt-1">
               Contratos en Cobrix
@@ -137,10 +156,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-emerald-950 font-mono tabular-nums tracking-tight">
-              USD {totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              USD {(kpis?.total_debt ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <span className="block text-[11px] text-emerald-700 font-medium mt-1 font-mono tabular-nums">
-              {totalOpenInvoices} facturas abiertas
+              {kpis?.total_open_invoices ?? 0} facturas abiertas
             </span>
           </div>
         </div>
@@ -153,7 +172,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
           <div className="mt-3">
             <span className="text-2xl font-bold text-emerald-600 font-mono tabular-nums">
-              {totalPaidInvoices}
+              {kpis?.total_paid_invoices ?? 0}
             </span>
             <span className="block text-[11px] text-slate-400 mt-1">
               Cuotas conciliadas
@@ -165,7 +184,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs relative overflow-hidden group hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Última corrida</span>
-            <Activity className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+            <Activity className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors" />
           </div>
           <div className="mt-2.5">
             {lastRun ? (
@@ -174,7 +193,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   {lastRun.type} {lastRun.is_simulation ? '(SIM)' : ''}
                 </Badge>
                 <span className="block text-[11px] text-slate-400 mt-1.5 font-mono tabular-nums truncate">
-                  {lastRun.finished_at || lastRun.started_at}
+                  {lastRun.finished_at || 'En curso'}
                 </span>
               </>
             ) : (
@@ -203,7 +222,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   Empresa
                 </span>
                 <span className="text-sm font-semibold text-slate-900 mt-0.5 block truncate">
-                  {config?.company_name || 'Cobrix Telecom'}
+                  {provider?.company_name || 'Cobrix Telecom'}
                 </span>
               </div>
               <div>
@@ -211,7 +230,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   RIF / Tax ID
                 </span>
                 <span className="text-sm font-mono tabular-nums text-slate-700 mt-0.5 block">
-                  {config?.company_tax_id || 'J-50123456-0'}
+                  {provider?.company_tax_id || 'J-50123456-0'}
                 </span>
               </div>
               <div className="col-span-2">
@@ -219,7 +238,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   URL API Proveedor
                 </span>
                 <span className="text-xs font-mono tabular-nums text-slate-700 mt-0.5 block truncate">
-                  {config?.api_url || 'http://127.0.0.1:4310'}
+                  {provider?.api_url || 'http://127.0.0.1:4310'}
                 </span>
               </div>
               <div>
@@ -227,7 +246,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   Usuario API
                 </span>
                 <span className="text-sm font-mono text-slate-700 mt-0.5 block">
-                  {config?.api_user || 'cobrix'}
+                  {provider?.api_user || 'cobrix'}
                 </span>
               </div>
               <div>
@@ -235,9 +254,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   Auto-Run Diario
                 </span>
                 <span className="text-sm font-semibold text-slate-700 mt-0.5 block">
-                  {config?.auto_run_enabled ? (
+                  {provider?.auto_run_enabled ? (
                     <span className="text-emerald-600 font-mono tabular-nums">
-                      {config.auto_run_hour || '03:00'} VET
+                      {provider.auto_run_hour || '03:00'} VET
                     </span>
                   ) : (
                     <span className="text-slate-400">Desactivado</span>
@@ -357,7 +376,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentRuns.map((r) => {
-                  const parts = r.summary ? r.summary.split('·').map((p) => p.trim()).filter(Boolean) : []
+                  const parts = parseSummaryBadges(r.summary)
                   return (
                     <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="py-3.5 font-mono tabular-nums text-xs text-slate-400">

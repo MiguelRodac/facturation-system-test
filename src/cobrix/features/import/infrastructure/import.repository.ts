@@ -134,6 +134,16 @@ export class SqliteImportRepository implements ImportRepositoryPort {
 		})
 	}
 
+	async resetData(): Promise<void> {
+		this.db.transaction(() => {
+			this.db.execute('DELETE FROM sync_run_item')
+			this.db.execute('DELETE FROM sync_run')
+			this.db.execute('DELETE FROM invoice')
+			this.db.execute('DELETE FROM contract')
+			this.db.execute('DELETE FROM customer')
+		})
+	}
+
 	async withTransaction<T>(work: () => Promise<T>): Promise<T> {
 		return this.db.transaction(work)
 	}

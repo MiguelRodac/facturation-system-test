@@ -26,5 +26,6 @@ export interface ImportRepositoryPort {
 	saveContract(contract: ContractEntity): Promise<void>
 	saveInvoice(invoice: InvoiceEntity): Promise<void>
 	recordSyncRun(run: RecordSyncRunInput): Promise<number>
+	resetData(): Promise<void>
 	withTransaction<T>(work: () => Promise<T>): Promise<T>
 }

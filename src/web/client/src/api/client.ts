@@ -5,6 +5,7 @@ import type {
   SyncRun,
   SyncRunDetail,
   ProblemDetails,
+  DashboardSummary,
 } from './types'
 
 const BASE_URL = '/api/v1'
@@ -64,6 +65,9 @@ export const api = {
   getCustomerDossier: (id: string) =>
     request<CustomerDossier>(`/customers/${encodeURIComponent(id)}`),
 
+  // Dashboard (BFF Aggregator)
+  getDashboard: () => request<DashboardSummary>('/dashboard'),
+
   // Sync
   importInstallments: (simulate: boolean = false) =>
     request<{
@@ -81,6 +85,8 @@ export const api = {
       partial_payments_count: number
       duration_seconds: number
     }>(`/sync/reconcile?simulate=${simulate}`, { method: 'POST' }),
+
+  resetData: () => request<{ cleared: boolean; message: string }>('/sync/reset', { method: 'POST' }),
 
   getRuns: () => request<SyncRun[]>('/sync/runs'),
   getRunDetail: (id: number) => request<SyncRunDetail>(`/sync/runs/${id}`),

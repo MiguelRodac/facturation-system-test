@@ -139,20 +139,15 @@ export class ImportInstallmentsUseCase {
 			}
 
 			const finishedAt = new Date().toISOString()
-			const summaryData = {
-				totalContractsChecked,
-				totalInstallmentsChecked,
-				importedInvoicesCount,
-				importedAmount: importedAmountCents / 100,
-				importedCustomersCount: importedCustomerIds.size,
-				isSimulation,
-			}
+			const summaryText = isSimulation
+				? `Simulación · Evaluados: ${totalContractsChecked} contratos (${totalInstallmentsChecked} cuotas) · Candidatas: ${importedInvoicesCount} facturas (USD ${(importedAmountCents / 100).toFixed(2)})`
+				: `Evaluados: ${totalContractsChecked} contratos (${totalInstallmentsChecked} cuotas) · Importadas: ${importedInvoicesCount} facturas (USD ${(importedAmountCents / 100).toFixed(2)}) · Clientes: ${importedCustomerIds.size}`
 
 			const runId = await this.repo.recordSyncRun({
 				type: 'IMPORT',
 				isSimulation,
 				status: 'COMPLETED',
-				summary: JSON.stringify(summaryData),
+				summary: summaryText,
 				startedAt,
 				finishedAt,
 				items,
@@ -176,7 +171,7 @@ export class ImportInstallmentsUseCase {
 				type: 'IMPORT',
 				isSimulation,
 				status: 'FAILED',
-				summary: JSON.stringify({ error: errorMessage }),
+				summary: `Error · ${errorMessage}`,
 				errorMessage,
 				startedAt,
 				finishedAt,

@@ -49,19 +49,14 @@ export class ReconcilePaymentsUseCase {
 			}
 
 			const finishedAt = new Date().toISOString()
-			const summaryData = {
-				totalContractsChecked,
-				totalInvoicesEvaluated,
-				paidInvoicesCount,
-				paidAmount: paidAmountCents / 100,
-				partialPaymentsCount,
-				isSimulation,
-			}
+			const summaryText = isSimulation
+				? `Simulación · Contratos: ${totalContractsChecked} · Facturas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)})`
+				: `Contratos: ${totalContractsChecked} · Evaluadas: ${totalInvoicesEvaluated} · Pagadas: ${paidInvoicesCount} (USD ${(paidAmountCents / 100).toFixed(2)}) · Parciales: ${partialPaymentsCount}`
 
 			const runId = await this.repo.recordSyncRun({
 				isSimulation,
 				status: 'COMPLETED',
-				summary: JSON.stringify(summaryData),
+				summary: summaryText,
 				startedAt,
 				finishedAt,
 				items,
@@ -84,7 +79,7 @@ export class ReconcilePaymentsUseCase {
 			await this.repo.recordSyncRun({
 				isSimulation,
 				status: 'FAILED',
-				summary: JSON.stringify({ error: errorMessage }),
+				summary: `Error · ${errorMessage}`,
 				errorMessage,
 				startedAt,
 				finishedAt,

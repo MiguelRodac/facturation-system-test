@@ -30,6 +30,45 @@ export function handleRFC9457Error(
 	}
 
 	const error = err instanceof Error ? err : new Error(String(err))
+	const errorStatus = (err as { status?: number; statusCode?: number }).status ??
+		(err as { status?: number; statusCode?: number }).statusCode
+
+	// Handle malformed JSON body-parser errors (SyntaxError with 400 status)
+	if (
+		(err instanceof SyntaxError && 'body' in err) ||
+		errorStatus === 400 ||
+		(err as { type?: string }).type === 'entity.parse.failed'
+	) {
+		const payload: RFC9457ProblemDetails = {
+			type: 'https://cobrix.com/errors/bad-request',
+			title: 'Bad Request',
+			status: 400,
+			detail: `Malformed JSON payload: ${error.message}`,
+			instance,
+			trace_id: traceId,
+			timestamp: new Date().toISOString(),
+		}
+		res.writeHead(400)
+		res.end(JSON.stringify(payload, null, 2))
+		return
+	}
+
+	// Handle client errors (400-499)
+	if (typeof errorStatus === 'number' && errorStatus >= 400 && errorStatus < 500) {
+		const payload: RFC9457ProblemDetails = {
+			type: `https://cobrix.com/errors/client-error`,
+			title: 'Client Error',
+			status: errorStatus,
+			detail: error.message || 'Client request could not be processed',
+			instance,
+			trace_id: traceId,
+			timestamp: new Date().toISOString(),
+		}
+		res.writeHead(errorStatus)
+		res.end(JSON.stringify(payload, null, 2))
+		return
+	}
+
 	const payload: RFC9457ProblemDetails = {
 		type: 'https://cobrix.com/errors/internal-server-error',
 		title: 'Internal Server Error',

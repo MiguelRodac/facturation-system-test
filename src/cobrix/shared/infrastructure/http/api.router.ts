@@ -27,8 +27,15 @@ import {
 	ImportController,
 	ImportInstallmentsUseCase,
 	IspBillingApiAdapter,
+	ResetSyncDataUseCase,
 	SqliteImportRepository,
 } from '../../../features/import/index.ts'
+import {
+	createDashboardRouter,
+	DashboardController,
+	GetDashboardSummaryUseCase,
+	SqliteDashboardRepository,
+} from '../../../features/dashboard/index.ts'
 import { SqliteInvoiceRepository } from '../../../features/invoices/index.ts'
 import {
 	createPaymentRouter,
@@ -76,6 +83,7 @@ export class CobrixApiRouter {
 		const runsRepo = new SqliteRunsRepository(db)
 		const importRepo = new SqliteImportRepository(db)
 		const paymentRepo = new SqlitePaymentRepository(db)
+		const dashboardRepo = new SqliteDashboardRepository(db)
 
 		// Adapters
 		const getBillingClient = () => {
@@ -107,7 +115,9 @@ export class CobrixApiRouter {
 		const getCustomerDossierUseCase = new GetCustomerDossierUseCase(customerRepo, contractRepo, invoiceRepo, customerEnricher)
 
 		const importUseCase = new ImportInstallmentsUseCase(importBillingAdapter, importRepo, configRepo)
+		const resetSyncDataUseCase = new ResetSyncDataUseCase(importRepo)
 		const reconcileUseCase = new ReconcilePaymentsUseCase(paymentBillingAdapter, paymentRepo)
+		const getDashboardSummaryUseCase = new GetDashboardSummaryUseCase(dashboardRepo)
 
 		this.importUseCase = importUseCase
 		this.reconcileUseCase = reconcileUseCase
@@ -118,9 +128,10 @@ export class CobrixApiRouter {
 		// Controllers
 		const configController = new ConfigurationController(getConfigUseCase, updateConfigUseCase, testConnUseCase)
 		const customerController = new CustomerController(listCustomersUseCase, getCustomerDossierUseCase)
-		const importController = new ImportController(importUseCase)
+		const importController = new ImportController(importUseCase, resetSyncDataUseCase)
 		const paymentController = new PaymentController(reconcileUseCase)
 		const runsController = new RunsController(getRecentRunsUseCase, getRunDetailUseCase)
+		const dashboardController = new DashboardController(getDashboardSummaryUseCase)
 
 		// Initialize Express App
 		this.app = express()
@@ -148,6 +159,7 @@ export class CobrixApiRouter {
 		this.app.use(createApiKeyAuthMiddleware({ apiKey: options.apiKey }))
 
 		// Feature Routers
+		this.app.use('/api/v1/dashboard', createDashboardRouter(dashboardController))
 		this.app.use('/api/v1/config', createConfigurationRouter(configController))
 		this.app.use('/api/v1/customers', createCustomerRouter(customerController))
 		this.app.use('/api/v1/sync', createImportRouter(importController))

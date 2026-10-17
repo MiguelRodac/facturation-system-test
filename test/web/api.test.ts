@@ -207,6 +207,46 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.ok(body.data.length >= 2)
 	})
 
+	it('GET /api/v1/dashboard returns aggregated BFF summary', async () => {
+		const res = await fetch(`${apiUrl}/api/v1/dashboard`)
+		assert.equal(res.status, 200)
+		const body = await res.json() as {
+			data: {
+				kpis: {
+					total_customers: number
+					total_contracts: number
+					total_debt: number
+					total_open_invoices: number
+					total_paid_invoices: number
+					last_run: unknown
+				}
+				provider: { company_name: string }
+				top_debtors: Array<{ id: string; name: string }>
+				recent_runs: Array<{ id: number; summary: string }>
+			}
+		}
+		assert.ok(body.data)
+		assert.ok(body.data.kpis.total_customers > 0)
+		assert.ok(body.data.provider.company_name)
+		assert.ok(Array.isArray(body.data.top_debtors))
+		assert.ok(Array.isArray(body.data.recent_runs))
+		assert.ok(body.data.recent_runs.length > 0)
+	})
+
+	it('POST /api/v1/sync/reset wipes synchronized database tables', async () => {
+		const resetRes = await fetch(`${apiUrl}/api/v1/sync/reset`, { method: 'POST' })
+		assert.equal(resetRes.status, 200)
+		const resetBody = await resetRes.json() as { ok: boolean; data: { cleared: boolean; message: string } }
+		assert.equal(resetBody.ok, true)
+		assert.equal(resetBody.data.cleared, true)
+
+		// Verify dashboard shows 0 customers and 0 open debt
+		const dashRes = await fetch(`${apiUrl}/api/v1/dashboard`)
+		const dashBody = await dashRes.json() as { data: { kpis: { total_customers: number; total_debt: number } } }
+		assert.equal(dashBody.data.kpis.total_customers, 0)
+		assert.equal(dashBody.data.kpis.total_debt, 0)
+	})
+
 	it('PUT /api/v1/config returns 422 RFC 9457 ValidationError for invalid payload', async () => {
 		const res = await fetch(`${apiUrl}/api/v1/config`, {
 			method: 'PUT',
@@ -222,6 +262,20 @@ describe('Cobrix REST API Endpoints (/api/v1/* & RFC 9457)', () => {
 		assert.equal(problem.status, 422)
 		assert.equal(problem.title, 'Validation Error')
 		assert.ok(problem.errors.some(e => e.field.includes('auto_run_hour')))
+	})
+
+	it('returns 400 RFC 9457 Bad Request when client sends malformed JSON', async () => {
+		const res = await fetch(`${apiUrl}/api/v1/config`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: '{ "invalid_json": ...',
+		})
+		assert.equal(res.status, 400)
+		assert.equal(res.headers.get('content-type'), 'application/problem+json')
+		const problem = await res.json() as { status: number; title: string; detail: string }
+		assert.equal(problem.status, 400)
+		assert.equal(problem.title, 'Bad Request')
+		assert.match(problem.detail, /Malformed JSON payload/)
 	})
 
 	it('PUT /api/v1/config updates configuration with arbitrary string tax ID without 500', async () => {

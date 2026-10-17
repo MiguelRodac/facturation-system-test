@@ -23,6 +23,35 @@ interface SyncPageProps {
   notify: (text: string, type: 'success' | 'error' | 'info') => void
 }
 
+function parseSummaryBadges(summary: string): string[] {
+  if (!summary) return []
+  if (summary.trim().startsWith('{')) {
+    try {
+      const data = JSON.parse(summary)
+      const parts: string[] = []
+      if (data.isSimulation) parts.push('Simulación')
+      if (data.totalContractsChecked !== undefined) parts.push(`Contratos: ${data.totalContractsChecked}`)
+      if (data.totalInstallmentsChecked !== undefined) parts.push(`Cuotas: ${data.totalInstallmentsChecked}`)
+      if (data.totalInvoicesEvaluated !== undefined) parts.push(`Facturas: ${data.totalInvoicesEvaluated}`)
+      if (data.importedInvoicesCount !== undefined) {
+        const amt = data.importedAmount !== undefined ? ` ($${Number(data.importedAmount).toFixed(2)})` : ''
+        parts.push(`Importadas: ${data.importedInvoicesCount}${amt}`)
+      }
+      if (data.paidInvoicesCount !== undefined) {
+        const amt = data.paidAmount !== undefined ? ` ($${Number(data.paidAmount).toFixed(2)})` : ''
+        parts.push(`Pagadas: ${data.paidInvoicesCount}${amt}`)
+      }
+      if (data.partialPaymentsCount) parts.push(`Parciales: ${data.partialPaymentsCount}`)
+      if (data.importedCustomersCount) parts.push(`Clientes: ${data.importedCustomersCount}`)
+      if (data.error) parts.push(`Error: ${data.error}`)
+      return parts.length > 0 ? parts : [summary]
+    } catch {
+      // fallback
+    }
+  }
+  return summary.split('·').map((p) => p.trim()).filter(Boolean)
+}
+
 export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
   const [runs, setRuns] = useState<SyncRun[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,7 +142,17 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
 
   const handleResetData = async () => {
     setShowResetConfirm(false)
-    notify('Reinicio de datos: Ejecute una importación limpia para sincronizar desde cero.', 'info')
+    try {
+      setLoading(true)
+      notify('Reiniciando base de datos de Cobrix...', 'info')
+      const res = await api.resetData()
+      notify(res.message || 'Base de datos reiniciada con éxito. Sandbox en cero.', 'success')
+      await loadRuns()
+    } catch (err: unknown) {
+      notify((err as Error).message, 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -244,9 +283,7 @@ export const SyncPage: React.FC<SyncPageProps> = ({ notify }) => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {runs.map((r) => {
-                  const parts = r.summary
-                    ? r.summary.split('·').map((p) => p.trim()).filter(Boolean)
-                    : []
+                  const parts = parseSummaryBadges(r.summary)
 
                   return (
                     <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">

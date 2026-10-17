@@ -14,5 +14,9 @@ export function createImportRouter(controller: ImportController): Router {
 		void controller.import(req, res, next)
 	})
 
+	router.post('/reset', (req, res, next) => {
+		void controller.reset(req, res, next)
+	})
+
 	return router
 }

@@ -22,6 +22,36 @@ export const OPENAPI_SPEC = {
 		{ BearerAuth: [] },
 	],
 	paths: {
+		'/api/v1/dashboard': {
+			get: {
+				summary: 'Obtener métricas y datos agregados para la pantalla de Dashboard (BFF)',
+				tags: ['Dashboard'],
+				responses: {
+					'200': {
+						description: 'Resumen del dashboard recuperado con éxito',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										data: { $ref: '#/components/schemas/DashboardSummaryDto' },
+									},
+									required: ['data'],
+								},
+							},
+						},
+					},
+					'401': {
+						description: 'API key o Bearer token faltante o inválido',
+						content: {
+							'application/problem+json': {
+								schema: { $ref: '#/components/schemas/ProblemDetails' },
+							},
+						},
+					},
+				},
+			},
+		},
 		'/api/v1/config': {
 			get: {
 				summary: 'Obtener configuración activa',
@@ -215,6 +245,34 @@ export const OPENAPI_SPEC = {
 										data: { $ref: '#/components/schemas/ImportResultDto' },
 									},
 									required: ['data'],
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		'/api/v1/sync/reset': {
+			post: {
+				summary: 'Reiniciar base de datos de Cobrix (borrar datos sincronizados e historial)',
+				tags: ['Sincronización'],
+				responses: {
+					'200': {
+						description: 'Datos reiniciados con éxito',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										ok: { type: 'boolean' },
+										data: {
+											type: 'object',
+											properties: {
+												cleared: { type: 'boolean' },
+												message: { type: 'string' },
+											},
+										},
+									},
 								},
 							},
 						},

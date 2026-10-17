@@ -131,3 +131,44 @@ export interface ProblemDetails {
   timestamp?: string
   errors?: Array<{ field: string; message: string }>
 }
+
+export interface DashboardKPI {
+  total_customers: number
+  total_contracts: number
+  total_debt: number
+  total_open_invoices: number
+  total_paid_invoices: number
+  last_run: {
+    id: number
+    type: string
+    is_simulation: boolean
+    status: string
+    summary: string
+    finished_at: string
+  } | null
+}
+
+export interface DashboardProvider {
+  company_name: string
+  company_tax_id: string
+  billing_email: string
+  api_url: string
+  api_user: string
+  auto_run_enabled: boolean
+  auto_run_hour: string | null
+}
+
+export interface DashboardDebtor {
+  id: string
+  name: string
+  person_type: 'NATURAL' | 'LEGAL'
+  open_invoices_count: number
+  total_debt: number
+}
+
+export interface DashboardSummary {
+  kpis: DashboardKPI
+  provider: DashboardProvider
+  top_debtors: DashboardDebtor[]
+  recent_runs: SyncRun[]
+}

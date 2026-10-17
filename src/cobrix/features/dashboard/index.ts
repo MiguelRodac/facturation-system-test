@@ -1,0 +1,6 @@
+export * from './domain/dashboard.entities.ts'
+export * from './domain/dashboard.repository.ts'
+export * from './application/get-dashboard-summary.use-case.ts'
+export * from './infrastructure/dashboard.repository.ts'
+export * from './infrastructure/dashboard.controller.ts'
+export * from './infrastructure/dashboard.routes.ts'
